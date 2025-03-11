@@ -85,8 +85,6 @@ export function htmlToMarkdown(dom: CheerioAPI): string {
     // DOM 内に <body> タグがあればその中身を使用、なければ全体を使用する
     const htmlContent = dom('body').html() || dom.html() || '';
     let markdown = turndownService.turndown(htmlContent);
-    console.log('markdown-------------------------')
-    console.log(markdown)
     
     // Markdown のフォーマットを統一する処理
     markdown = formatMarkdown(markdown);

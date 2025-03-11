@@ -7,6 +7,7 @@ import { htmlToMarkdown } from './parser/markdownFormatter';
 import { rateLimitedRequest } from './utils/rateLimiter';
 import apiRetry from './utils/apiRetry';
 import { translate } from './translator';
+import { summarize } from './summarizer';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
 import { saveSitemapToFile, saveMarkdownToFile } from './fileWriter';
@@ -42,24 +43,43 @@ program.command('url')
       const htmlContents = await readHtmlFiles(url);
       console.log(`HTML Contents: ${htmlContents.length} files`);
 
-      if (htmlContents.length > 0) {
-        for (const item of htmlContents) {
-          const dom = parseHtmlToDOM(item.htmlContent);
-          if (dom) {
-            const markdown = htmlToMarkdown(dom);
-            console.log(`Markdown: ${markdown.substring(0, 100)}...`);
-            await saveMarkdownToFile(markdown, item.url);
-            console.log(`DOM: Parsed successfully`);
-          } else {
-            console.log(`DOM: Failed to parse`);
-          }
-        }
+      if (htmlContents.length <= 0) {
+        console.log('No HTML contents to process.');
+        return;
       }
 
-      //const document = await downloadDocument(url);
-      //const markdown = await htmlToMarkdown(document);
-      //const translatedText = await rateLimitedRequest(() => translate(markdown, options.language));
-      //console.log(`Translated: ${translatedText.substring(0, 100)}...`);
+      for (const item of htmlContents) {
+        const dom = parseHtmlToDOM(item.htmlContent);
+        if (!dom) {
+          console.log(`DOM: Failed to parse`);
+          continue;
+        }
+
+        const markdown = htmlToMarkdown(dom);
+        console.log(`Markdown: ${markdown.substring(0, 100)}...`);
+        await saveMarkdownToFile(markdown, item.url);
+        console.log(`DOM: Parsed successfully`);
+
+        let summarizedText, translatedText;
+
+        if (options.summaryOnly) {
+          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown)));
+          console.log(`Summarized: ${summarizedText.substring(0, 100)}...`);
+        }
+
+        if (options.translateOnly) {
+          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, options.language)));
+          console.log(`Translated: ${translatedText.substring(0, 100)}...`);
+        }
+
+        if (!options.summaryOnly && !options.translateOnly) {
+          console.log("Both summary and translation are enabled.");
+          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown)));
+          console.log(`Summarized: ${summarizedText.substring(0, 100)}...`);
+          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, options.language)));
+          console.log(`Translated: ${translatedText.substring(0, 100)}...`);
+        }
+      }
     } catch (error) {
       console.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);
     }

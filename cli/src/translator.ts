@@ -1,10 +1,7 @@
 // Google Gemini APIで翻訳
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { translatePrompt } from "./prompts";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+import { model } from './genAIClient';
 
 export async function translate(text: string, language: string): Promise<string> {
   try {

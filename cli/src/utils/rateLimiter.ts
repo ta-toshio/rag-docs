@@ -1,5 +1,10 @@
 import Bottleneck from "bottleneck";
 
+/**
+ * APIリクエストをレートリミット付きで実行
+ * @see .roo/docs/rateLimit.md
+ */
+
 // 1分間に15回の制限 = 4秒（4000ms）間隔
 const limiter = new Bottleneck({
   minTime: 4000,  // 4000ms（4秒）ごとに1リクエスト
