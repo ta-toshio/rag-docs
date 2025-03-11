@@ -7,7 +7,7 @@ import { htmlToMarkdown } from './parser/markdownFormatter';
 import { translate } from './translator';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
-import { saveSitemapToFile } from './fileWriter';
+import { saveSitemapToFile, saveMarkdownToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
 import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
 
@@ -41,13 +41,16 @@ program.command('url')
       console.log(`HTML Contents: ${htmlContents.length} files`);
 
       if (htmlContents.length > 0) {
-        const dom = parseHtmlToDOM(htmlContents[0]);
-        if (dom) {
-          const markdown = htmlToMarkdown(dom);
-          console.log(`Markdown: ${markdown.substring(0, 100)}...`);
-          console.log(`DOM: Parsed successfully`);
-        } else {
-          console.log(`DOM: Failed to parse`);
+        for (const item of htmlContents) {
+          const dom = parseHtmlToDOM(item.htmlContent);
+          if (dom) {
+            const markdown = htmlToMarkdown(dom);
+            console.log(`Markdown: ${markdown.substring(0, 100)}...`);
+            await saveMarkdownToFile(markdown, item.url);
+            console.log(`DOM: Parsed successfully`);
+          } else {
+            console.log(`DOM: Failed to parse`);
+          }
         }
       }
 

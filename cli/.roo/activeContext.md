@@ -78,4 +78,9 @@
             *   引数1: Markdown テキスト
             *   引数2: 元の URL
             *   返り値: なし
-    *   実装対象ファイル: `src/fileWriter.ts`
+        *   **`saveMarkdownToFile` 関数を実装した。**
+    *   **`README.md` を更新し、以下の点を修正する。**
+        *   **`--force-fetch` オプションを追記する。**
+        *   **`input` コマンドの説明を修正する。**
+        *   **出力先のディレクトリ構成について説明を追加する。**
+    *   実装対象ファイル: `src/fileWriter.ts`、`README.md`

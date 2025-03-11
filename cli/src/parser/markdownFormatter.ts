@@ -1,5 +1,6 @@
 import TurndownService from 'turndown';
 import { CheerioAPI } from 'cheerio';
+// @ts-ignore この行は削除しないで
 import { gfm } from 'turndown-plugin-gfm';
 
 /**
@@ -20,6 +21,31 @@ export function htmlToMarkdown(dom: CheerioAPI): string {
     
     // GitHub Flavored Markdown プラグインの適用
     turndownService.use(gfm);
+
+    // // コードブロックのカスタムルールを追加（デフォルトルールを上書き）
+    // turndownService.addRule('fencedCodeBlock', {
+    //   filter: (node) => {
+    //     return (
+    //       node.nodeName === 'PRE' &&
+    //       node.firstChild &&
+    //       node.firstChild.nodeName === 'CODE'
+    //     );
+    //   },
+    //   replacement: (content, node) => {
+    //     const codeNode = node.firstChild;
+    //     let language = '';
+    //     const className = codeNode.getAttribute('class');
+    //     if (className) {
+    //       const match = className.match(/language-([\w-]+)/);
+    //       if (match) {
+    //         language = match[1];
+    //       }
+    //     }
+    //     // ここでコードの内容をそのまま取得し、余分な変更をしない
+    //     const codeText = codeNode.textContent;
+    //     return '\n\n```' + language + '\n' + codeText + '\n```\n\n';
+    //   }
+    // });
     
     // 画像タグ (<img>) の処理：title 属性がある場合も含める
     turndownService.addRule('image', {
@@ -59,6 +85,8 @@ export function htmlToMarkdown(dom: CheerioAPI): string {
     // DOM 内に <body> タグがあればその中身を使用、なければ全体を使用する
     const htmlContent = dom('body').html() || dom.html() || '';
     let markdown = turndownService.turndown(htmlContent);
+    console.log('markdown-------------------------')
+    console.log(markdown)
     
     // Markdown のフォーマットを統一する処理
     markdown = formatMarkdown(markdown);
@@ -77,15 +105,31 @@ export function htmlToMarkdown(dom: CheerioAPI): string {
  * @returns {string} - 整形後の Markdown 文字列
  */
 function formatMarkdown(markdown: string): string {
-  // ① 番号付きリスト: 番号とテキストの間の余分なスペースを1つに統一
+  // コードブロック（```）を検出して一時的にプレースホルダーに置き換える
+  const codeBlockRegex = /^```.*\n([\s\S]*?)\n```$/gm;
+  const codeBlocks: string[] = [];
+  markdown = markdown.replace(codeBlockRegex, (match) => {
+    codeBlocks.push(match);
+    return `{{CODE_BLOCK_${codeBlocks.length - 1}}}`;
+  });
+
+  // 番号付きリスト: 番号とテキストの間の余分なスペースを1つに統一
   markdown = markdown.replace(/^(\d+\.)\s+/gm, '$1 ');
 
-  // ② 箇条書きリスト: ハイフンとテキストの間の余分なスペースを1つに統一
+  // 箇条書きリスト: ハイフンとテキストの間の余分なスペースを1つに統一
   markdown = markdown.replace(/^(\s*-)\s+/gm, '$1 ');
 
-  // ③ タスクリスト: チェックボックス部分 ([x] または [ ]) の後の余分なスペースを1つに統一
+  // タスクリスト: チェックボックス部分 ([x] または [ ]) の後の余分なスペースを1つに統一
   markdown = markdown.replace(/^(\s*-\s*\[[ xX]\])\s+/gm, '$1 ');
 
-  // ④ 全体の不要な空白・改行の削除
-  return markdown.trim();
+  // 全体の不要な空白・改行の削除
+  markdown = markdown.trim();
+
+  // プレースホルダーを元のコードブロックに戻す
+  markdown = markdown.replace(/{{CODE_BLOCK_(\d+)}}/g, (match, index) => {
+    return codeBlocks[parseInt(index, 10)];
+  });
+
+  return markdown;
 }
+

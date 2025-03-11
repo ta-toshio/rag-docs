@@ -31,27 +31,27 @@ export function getHtmlFilePathsFromSitemap(sitemapPath: string): {url: string, 
   }
 }
 
-export async function readHtmlFiles(url: string): Promise<string[]> {
+export async function readHtmlFiles(url: string): Promise<{ url: string; htmlContent: string }[]> {
   try {
     const parsedUrl = new URL(url);
     const domain = parsedUrl.hostname;
     const sitemapPath = path.join('output', domain, 'sitemap.json');
-    const htmlFilePaths = getHtmlFilePathsFromSitemap(sitemapPath)
-      .filter(entry => entry.fetch)
-      .map(entry => entry.url);
+    const sitemapJson = fs.readFileSync(sitemapPath, 'utf-8');
+    const sitemap: SitemapEntry[] = JSON.parse(sitemapJson);
+    const htmlFilePaths = getHtmlFilePathsFromSitemap(sitemapPath).filter(entry => entry.fetch);
 
     if (htmlFilePaths.length === 0) {
       console.warn(`No HTML file paths found in sitemap.json: ${sitemapPath}`);
       return [];
     }
 
-    const htmlContents: string[] = [];
-    for (const filePath of htmlFilePaths) {
+    const htmlContents: { url: string; htmlContent: string }[] = [];
+    for (const entry of htmlFilePaths) {
       try {
-        const htmlContent = fs.readFileSync(filePath, 'utf-8');
-        htmlContents.push(htmlContent);
+        const htmlContent = fs.readFileSync(entry.url, 'utf-8');
+        htmlContents.push({ url: entry.url, htmlContent });
       } catch (error) {
-        console.error(`Error reading HTML file: ${filePath}`, error);
+        console.error(`Error reading HTML file: ${entry.url}`, error);
       }
     }
 
