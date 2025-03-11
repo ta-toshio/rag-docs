@@ -4,6 +4,8 @@ import { Command, Option } from 'commander';
 import { downloadDocument } from './fileProcessor';
 import { parseHtmlToDOM } from './parser/parser';
 import { htmlToMarkdown } from './parser/markdownFormatter';
+import { rateLimitedRequest } from './utils/rateLimiter';
+import apiRetry from './utils/apiRetry';
 import { translate } from './translator';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
@@ -56,7 +58,7 @@ program.command('url')
 
       //const document = await downloadDocument(url);
       //const markdown = await htmlToMarkdown(document);
-      //const translatedText = await translate(markdown, options.language);
+      //const translatedText = await rateLimitedRequest(() => translate(markdown, options.language));
       //console.log(`Translated: ${translatedText.substring(0, 100)}...`);
     } catch (error) {
       console.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);

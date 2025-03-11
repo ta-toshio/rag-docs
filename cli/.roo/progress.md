@@ -38,7 +38,7 @@
 | 6  |                  | **リスト・表・コードブロックを適切に処理** | `ul`, `ol`, `table`, `pre` などを Markdown の書式に変換 | `src/parser/markdownFormatter.ts` | ✅ |
 | 7  |                  | **Markdown のフォーマットを統一** | インデント・改行のルールを統一する | `src/parser/markdownFormatter.ts` | ✅ |
 | 8  | **ファイル出力**  | **Markdown を `output/sample.com/markdown/` に保存** | | `src/fileWriter.ts` | ✅ |
-| 9  | **レート制限・リトライ機能** | **Google Gemini API のレートリミット制御を実装** | **Bottleneck を利用し、リクエスト間隔を管理** | `src/utils/rateLimiter.ts` | ⏳ |
+| 9  | **レート制限・リトライ機能** | **Google Gemini API のレートリミット制御を実装** | **Bottleneck を利用し、リクエスト間隔を管理** | `src/utils/rateLimiter.ts` | ✅ |
 | 10 |                   | **翻訳 API・要約 API のリトライ処理を実装** | **エラーハンドリング & バックオフ制御を組み込む** | `src/utils/apiRetry.ts` | ⏳ |
 | 11 | **翻訳処理**      | **Markdown を翻訳対象として読み込む** | | `src/translator.ts` | ⏳ |
 | 12 |                  | **Google Gemini API を使用して翻訳を実施** | | `src/translator.ts` | ⏳ |
