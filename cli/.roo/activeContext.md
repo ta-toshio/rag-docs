@@ -6,7 +6,7 @@
 *   マイルストーン1.5のタスクを順番通りに進めることになった。
 
 次にやること：
-*   マイルストーン1.5の7番目のタスクである「Markdown 変換 - Markdown のフォーマットを統一」を実装する。
+*   マイルストーン1.5の8番目のタスクである「ファイル出力 - Markdown を `output/sample.com/markdown/` に保存」を実装する。
     *   HTML ファイルのパスの取得
         *   **`sitemap.json` から、HTML ファイルのパスを取得する。**
         *   `sitemap.json` はマイルストーン1で出力されている。
@@ -52,6 +52,7 @@
         *   **`htmlToMarkdown` 関数の引数を HTML 文字列から Cheerio オブジェクトに変更し、動作確認が完了した。**
         *   **`convertMarkdownFormat` 関数内で、`turndown` サービスを使用して Markdown 変換を行う際に、リスト・表・コードブロックが適切に処理されるように、`turndown` サービスのオプションを調整し、画像とリンクの処理も行うように修正した。**
         *   **`turndown-plugin-gfm` を使用して、Markdown 変換の機能を拡張した。**
+        *   **リスト・表・コードブロックが適切に処理されるように、`turndown` サービスのオプションを調整し、画像とリンクの処理も行うように修正した。テストも実装し、動作確認が完了した。**
     *   Markdown のフォーマットを統一
         *   Markdown のインデントや改行のルールを統一する。
         *   これらのルールは、`.roo/docs/markdownFormatter.md` のようなファイルに記述しておくと、後で参照しやすくなる。
@@ -63,4 +64,18 @@
         *   `formatMarkdown(markdown: string): string` のような関数を定義する。
             *   引数: Markdown テキスト
             *   返り値: フォーマット済みの Markdown テキスト
-    *   実装対象ファイル: `src/parser/markdownFormatter.ts`
+        *   **`formatMarkdown` 関数を実装し、動作確認が完了した。**
+    *   ファイル出力
+        *   `output/sample.com/markdown/` ディレクトリが存在しない場合は、作成する。
+        *   Node.js の `fs.mkdirSync` 関数を使用する。
+        *   `recursive: true` オプションを指定することで、親ディレクトリが存在しない場合でも再帰的にディレクトリを作成できる。
+        *   HTML ファイル名に対応する Markdown ファイル名を決定する。
+        *   例えば、`output/sample.com/html/path/to/page.html` に対応する Markdown ファイルは、`output/sample.com/markdown/path/to/page.md` となる。
+        *   Node.js の `fs.writeFileSync` 関数を使用して、Markdown ファイルを書き込む。
+        *   ファイルのエンコーディングは UTF-8 を使用する。
+        *   ディレクトリの作成に失敗した場合や、ファイルの書き込みに失敗した場合のエラーハンドリングを実装する。
+        *   `saveMarkdownToFile(markdown: string, url: string): Promise<void>` のような関数を定義する。
+            *   引数1: Markdown テキスト
+            *   引数2: 元の URL
+            *   返り値: なし
+    *   実装対象ファイル: `src/fileWriter.ts`

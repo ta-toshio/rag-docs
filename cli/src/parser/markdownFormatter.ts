@@ -77,9 +77,15 @@ export function htmlToMarkdown(dom: CheerioAPI): string {
  * @returns {string} - 整形後の Markdown 文字列
  */
 function formatMarkdown(markdown: string): string {
-  // 番号付きリスト：番号とテキストの間の余分なスペースを1つに正規化
-  markdown = markdown.replace(/^(\d+\.)\s+/gm, (match, p1) => `${p1} `);
-  // 箇条書きリスト（およびネストしたリスト）：ハイフンとテキストの間の余分なスペースを1つに正規化
+  // ① 番号付きリスト: 番号とテキストの間の余分なスペースを1つに統一
+  markdown = markdown.replace(/^(\d+\.)\s+/gm, '$1 ');
+
+  // ② 箇条書きリスト: ハイフンとテキストの間の余分なスペースを1つに統一
   markdown = markdown.replace(/^(\s*-)\s+/gm, '$1 ');
+
+  // ③ タスクリスト: チェックボックス部分 ([x] または [ ]) の後の余分なスペースを1つに統一
+  markdown = markdown.replace(/^(\s*-\s*\[[ xX]\])\s+/gm, '$1 ');
+
+  // ④ 全体の不要な空白・改行の削除
   return markdown.trim();
 }

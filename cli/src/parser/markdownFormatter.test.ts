@@ -72,6 +72,7 @@ describe('htmlToMarkdown', () => {
     const dom = cheerio.load(html);
     const markdown = htmlToMarkdown(dom);
     expect(markdown).toContain('| Header 1 | Header 2 |');
+    expect(markdown).toContain('| --- | --- |');
     expect(markdown).toContain('| Row1 Col1 | Row1 Col2 |');
   });
 
@@ -165,4 +166,11 @@ describe('htmlToMarkdown', () => {
     // 段落間に適切な改行があることを期待
   });
 
+  it('should handle task lists', () => {
+    const html = `<ul><li><input type="checkbox" checked> Item 1</li><li><input type="checkbox"> Item 2</li></ul>`;
+    const dom = cheerio.load(html);
+    const markdown = htmlToMarkdown(dom);
+    expect(markdown).toContain('- [x] Item 1');
+    expect(markdown).toContain('- [ ] Item 2');
+  });
 });
