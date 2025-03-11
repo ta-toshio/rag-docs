@@ -30,13 +30,13 @@
 
 | **#** | **カテゴリ**            | **タスク** | **詳細** | **実装対象ファイル** | **進捗** |
 |----|------------------|------------------------------------------|---------------------------|----------------|------|
-| 1  | **HTML 解析**    | **ダウンロードした HTML を読み込む** | `output/sample.com/html/` 内の HTML を読み込む | `src/parser/parser.ts` | ⏳ |
-| 2  |                  | **HTML を DOM にパースする** | `cheerio` などを使用して DOM ツリーを解析 | `src/parser/parser.ts` | ⏳ |
-| 3  |                  | **不要なスクリプト・スタイルを除外** | `script` / `style` タグを削除 | `src/parser/parser.ts` | ⏳ |
-| 4  |                  | **本文テキストを抽出する** | `main`, `article`, `p`, `h1~h6` などの要素を対象にテキストを取得 | `src/parser/parser.ts` | ⏳ |
-| 5  | **Markdown 変換** | **HTML を Markdown に変換** | `turndown` などを利用して Markdown に変換 | `src/parser/parser.ts` | ⏳ |
-| 6  |                  | **リスト・表・コードブロックを適切に処理** | `ul`, `ol`, `table`, `pre` などを Markdown の書式に変換 | `src/parser/parser.ts` | ⏳ |
-| 7  |                  | **Markdown のフォーマットを統一** | インデント・改行のルールを統一する | `src/parser/markdownFormatter.ts` | ⏳ |
+| 1  | **HTML 解析**    | **ダウンロードした HTML を読み込む** | `output/sample.com/html/` 内の HTML を読み込む | `src/parser/parser.ts` | ✅ |
+| 2  |                  | **HTML を DOM にパースする** | `cheerio` などを使用して DOM ツリーを解析 | `src/parser/parser.ts` | ✅ |
+| 3  |                  | **不要なスクリプト・スタイルを除外** | `script` / `style` タグを削除 | `src/parser/parser.ts` | ✅ |
+| 4  |                  | **本文テキストを抽出する** | `main`, `article`, `p`, `h1~h6` などの要素を対象にテキストを取得 |  | ❌ (対応しない) |
+| 5  | **Markdown 変換** | **HTML を Markdown に変換** | `turndown` などを利用して Markdown に変換 | `src/parser/markdownFormatter.ts` | ✅ |
+| 6  |                  | **リスト・表・コードブロックを適切に処理** | `ul`, `ol`, `table`, `pre` などを Markdown の書式に変換 | `src/parser/markdownFormatter.ts` | ✅ |
+| 7  |                  | **Markdown のフォーマットを統一** | インデント・改行のルールを統一する |  | ⏳ |
 | 8  | **ファイル出力**  | **Markdown を `output/sample.com/markdown/` に保存** | | `src/fileWriter.ts` | ⏳ |
 | 9  | **レート制限・リトライ機能** | **Google Gemini API のレートリミット制御を実装** | **Bottleneck を利用し、リクエスト間隔を管理** | `src/utils/rateLimiter.ts` | ⏳ |
 | 10 |                   | **翻訳 API・要約 API のリトライ処理を実装** | **エラーハンドリング & バックオフ制御を組み込む** | `src/utils/apiRetry.ts` | ⏳ |

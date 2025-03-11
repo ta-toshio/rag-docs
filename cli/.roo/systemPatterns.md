@@ -123,8 +123,7 @@ Options:
 │   │   ├── summary/
 ├── src/
 │   ├── cli.ts           # CLI のエントリーポイント
-│   ├── fileProcessor/ # ローカルファイルの処理
-│   │   ├── fileProcessor.ts
+│   ├── fileProcessor.ts # ローカルファイルの処理
 │   ├── parser/        # HTML / テキスト → Markdown 変換
 │   │   ├── parser.ts
 │   │   ├── markdownFormatter.ts

@@ -2,12 +2,14 @@
 
 import { Command, Option } from 'commander';
 import { downloadDocument } from './fileProcessor';
-import { htmlToMarkdown } from './parser';
+import { parseHtmlToDOM } from './parser/parser';
+import { htmlToMarkdown } from './parser/markdownFormatter';
 import { translate } from './translator';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
 import { saveSitemapToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
+import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
 
 const program = new Command();
 
@@ -34,14 +36,27 @@ program.command('url')
       const sortedSitemap = sortByDirectory(sitemap, url);
       await saveSitemapToFile(sortedSitemap, url);
       console.log(JSON.stringify(sortedSitemap, null, 2));
-      //console.log(`Crawled page: ${JSON.stringify(crawledPage, null, 2)}`);
+
+      const htmlContents = await readHtmlFiles(url);
+      console.log(`HTML Contents: ${htmlContents.length} files`);
+
+      if (htmlContents.length > 0) {
+        const dom = parseHtmlToDOM(htmlContents[0]);
+        if (dom) {
+          const markdown = htmlToMarkdown(dom);
+          console.log(`Markdown: ${markdown.substring(0, 100)}...`);
+          console.log(`DOM: Parsed successfully`);
+        } else {
+          console.log(`DOM: Failed to parse`);
+        }
+      }
 
       //const document = await downloadDocument(url);
       //const markdown = await htmlToMarkdown(document);
       //const translatedText = await translate(markdown, options.language);
       //console.log(`Translated: ${translatedText.substring(0, 100)}...`);
     } catch (error) {
-      console.error(`Failed to process URL: ${error}`);
+      console.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
