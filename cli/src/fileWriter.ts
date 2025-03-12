@@ -25,7 +25,8 @@ async function writeFile(data: string, url: string, subDirectory: string, fileEx
     const domain = urlObj.hostname;
     const pathDir = path.dirname(urlObj.pathname);
     const parentDir = path.basename(pathDir); // 空文字列でも許容
-    const outputPath = path.join('output', domain, subDirectory, parentDir);
+    const baseOutput = path.join('output', domain, subDirectory);
+    const outputPath = parentDir ? path.join(baseOutput, parentDir) : baseOutput;
     const filename = path.basename(urlObj.pathname).replace('.html', '') || 'index';
     console.log(`filename: ${filename}`);
     const filepath = path.join(outputPath, `${filename}.${fileExtension}`);
@@ -47,8 +48,8 @@ async function saveTranslationToFile(translatedText: string, url: string): Promi
   await writeFile(translatedText, url, 'translation', 'md');
 }
 
-async function saveSumarizationToFile(summary: string, url: string): Promise<void> {
+async function saveSummarizationToFile(summary: string, url: string): Promise<void> {
   await writeFile(summary, url, 'summary', 'md');
 }
 
-export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSumarizationToFile };
+export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile };

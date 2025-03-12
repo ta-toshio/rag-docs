@@ -11,7 +11,7 @@ import { translate } from './translator';
 import { summarize } from './summarizer';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
-import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSumarizationToFile } from './fileWriter';
+import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
 import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
 import { LanguageName, getLanguageName, LanguageCode, isValidLanguageCode } from './types/language';
@@ -92,7 +92,7 @@ program.command('url')
         }
 
         if (summarization?.summary) {
-          await saveSumarizationToFile(summarization.summary, item.url);
+          await saveSummarizationToFile(summarization.summary, item.url);
         }
       }
     } catch (error) {
