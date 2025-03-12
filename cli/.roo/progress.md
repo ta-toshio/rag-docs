@@ -43,9 +43,9 @@
 | 11 | **翻訳処理**      | **Markdown を翻訳対象として読み込む** | | `src/translator.ts` |  |  | ✅ |
 | 12 |                  | **Google Gemini API を使用して翻訳を実施** | | `src/translator.ts` |  |  | ✅ |
 | 13 |                  | **翻訳結果を `output/sample.com/translation/` に保存** | | `src/fileWriter.ts` |  |  | ✅ |
-| 14 | **要約処理**      | **Markdown を要約対象として読み込む** | | `src/summarizer.ts` |  |  | ⏳ |
-| 15 |                  | **Google Gemini API を使用して要約を実施** | | `src/summarizer.ts` |  |  | ⏳ |
-| 16 |                  | **要約結果を `output/sample.com/summary/` に保存** | | `src/fileWriter.ts` |  |  | ⏳ |
+| 14 | **要約処理**      | **Markdown を要約対象として読み込む** | | `src/summarizer.ts` |  |  | ✅ |
+| 15 |                  | **Google Gemini API を使用して要約を実施** | | `src/summarizer.ts` |  |  | ✅ |
+| 16 |                  | **要約結果を `output/sample.com/summary/` に保存** | | `src/fileWriter.ts` |  |  | ✅ |
 | 17 | **エラーハンドリング** | **HTML のパースエラーを処理** | | `src/parser/parser.ts` |  |  | ⏳ |
 | 18 |                  | **翻訳 API のエラーを処理** | | `src/translator.ts` |  |  | ⏳ |
 | 19 |                  | **要約 API のエラーを処理** | | `src/summarizer.ts` |  |  | ⏳ |

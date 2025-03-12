@@ -1,3 +1,5 @@
+import { logger } from "../logger";
+
 /**
  * Promise を返す関数を指定回数（exponential backoff付き）で再試行します。
  *
@@ -19,7 +21,7 @@ async function apiRetry<T>(
       if (attempt === retries) {
         throw error;
       }
-      console.warn(`試行 ${attempt + 1} 回目が失敗しました。${backoff}ms 後に再試行します...`);
+      logger.warn(`試行 ${attempt + 1} 回目が失敗しました。${backoff}ms 後に再試行します...`);
       await new Promise(resolve => setTimeout(resolve, backoff));
       backoff *= 2; // 待機時間を指数関数的に増加
     }

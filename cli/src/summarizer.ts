@@ -1,6 +1,6 @@
-import { logger } from "./logger";
 // Google Gemini APIで要約
 import { ResponseSchema, SchemaType } from "@google/generative-ai";
+import { logger } from "./logger";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
 import { LanguageName } from "./types/language";

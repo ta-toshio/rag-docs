@@ -1,20 +1,19 @@
 #!/usr/bin/env node
-import { logger } from './logger';
 import 'dotenv/config';
 import { Command, Option } from 'commander';
-import { downloadDocument } from './fileProcessor';
+import { logger } from './logger';
 import { parseHtmlToDOM } from './parser/parser';
 import { htmlToMarkdown } from './parser/markdownFormatter';
 import { rateLimitedRequest } from './utils/rateLimiter';
 import apiRetry from './utils/apiRetry';
 import { translate } from './translator';
 import { summarize } from './summarizer';
-import { crawlPage, getHTML } from './crawler/crawler';
+import { crawlPage } from './crawler/crawler';
 import { SitemapEntry } from './types';
 import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
-import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
-import { LanguageName, getLanguageName, LanguageCode, isValidLanguageCode } from './types/language';
+import { readHtmlFiles } from './parser/parser';
+import { getLanguageName, isValidLanguageCode } from './types/language';
 
 const program = new Command();
 
@@ -42,7 +41,7 @@ program.command('url')
       const allowedDomains = options.allowDomains ? options.allowDomains.split(',') : [];
       const normalizedBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
       const sitemap: SitemapEntry[] = await crawlPage(normalizedBaseUrl, parseInt(options.depth), allowedDomains, 1, options.forceFetch);
-      console.log(`saveSitemapToFile url: ${url}`);
+      logger.info(`saveSitemapToFile url: ${url}`);
       const sortedSitemap = sortByDirectory(sitemap, url);
       await saveSitemapToFile(sortedSitemap, url);
       // console.log(JSON.stringify(sortedSitemap, null, 2));
@@ -51,7 +50,7 @@ program.command('url')
       // console.log(`HTML Contents: ${htmlContents.length} files`);
 
       if (htmlContents.length <= 0) {
-        console.log('No HTML contents to process.');
+        logger.info('No HTML contents to process.');
         return;
       }
 
@@ -65,8 +64,8 @@ program.command('url')
         }
 
         const markdown = htmlToMarkdown(dom);
-        // console.log(`Markdown: ${markdown.substring(0, 100)}...`);
-        console.log(`item.path: ${item.path}`);
+        // logger.info(`Markdown: ${markdown.substring(0, 100)}...`);
+        logger.info(`item.path: ${item.path}`);
         await saveMarkdownToFile(markdown, item.url);
         // console.log(`DOM: Parsed successfully`);
 
@@ -124,7 +123,7 @@ program.command('input')
   .addOption(new Option('--summary-only', '要約のみ実行'))
   .addOption(new Option('--translate-only', '翻訳のみ実行'))
   .action((options: { language: string, summaryOnly: boolean, translateOnly: boolean }) => {
-    console.log(`Input Options: ${JSON.stringify(options)}`);
+    logger.info(`Input Options: ${JSON.stringify(options)}`);
   });
 
 program.parse(process.argv);

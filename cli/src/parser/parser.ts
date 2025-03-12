@@ -48,7 +48,7 @@ export async function readHtmlFiles(url: string): Promise<HtmlContentEntry[]> {
       console.warn(`No HTML file paths found in sitemap.json: ${sitemapPath}`);
       return [];
     }
-    console.log(`htmlFilePaths:`, htmlFilePaths);
+    logger.info(`htmlFilePaths: ${JSON.stringify(htmlFilePaths)}`);
 
     const htmlContents: HtmlContentEntry[] = [];
     for (const entry of htmlFilePaths) {

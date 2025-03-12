@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { logger } from './logger';
 
 async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
   try {
@@ -12,10 +13,10 @@ async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
     try {
       fs.writeFileSync(filepath, JSON.stringify(sitemap, null, 2));
     } catch (e) {
-      console.error(`writeFileSync error: ${e}`);
+      logger.error(`writeFileSync error: ${e}`);
     }
   } catch (error) {
-    console.error(`サイトマップの保存中にエラーが発生:`, error);
+    logger.error(`サイトマップの保存中にエラーが発生:`, error);
   }
 }
 
@@ -28,15 +29,14 @@ async function writeFile(data: string, url: string, subDirectory: string, fileEx
     const baseOutput = path.join('output', domain, subDirectory);
     const outputPath = parentDir ? path.join(baseOutput, parentDir) : baseOutput;
     const filename = path.basename(urlObj.pathname).replace('.html', '') || 'index';
-    console.log(`filename: ${filename}`);
     const filepath = path.join(outputPath, `${filename}.${fileExtension}`);
 
     fs.mkdirSync(outputPath, { recursive: true });
     fs.writeFileSync(filepath, data, 'utf-8');
 
-    console.log(`${subDirectory} ファイルを保存: ${filepath}`);
+    logger.info(`${subDirectory} ファイルを保存: ${filepath}`);
   } catch (error) {
-    console.error(`${subDirectory} ファイルの保存中にエラーが発生:`, error);
+    logger.error(`${subDirectory} ファイルの保存中にエラーが発生: ${error}`);
   }
 }
 

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
 import * as cheerio from 'cheerio';
+import { logger } from '../logger';
 import { SitemapEntry } from '../types';
 import { fetchHTML, saveHTMLToFile } from './htmlUtils';
 import { processLink } from './linkProcessor';
@@ -16,11 +17,11 @@ async function getHTML(url: string, forceFetch: boolean = false): Promise<string
     const filepath = path.join(outputPath, `${filename}.html`);
 
     if (!forceFetch && fs.existsSync(filepath)) {
-      console.log(`キャッシュからHTMLを取得: ${url}`);
+      logger.info(`キャッシュからHTMLを取得: ${url}`);
       return fs.readFileSync(filepath, 'utf-8');
     } else {
       if (forceFetch) {
-        console.log(`--force-fetchが指定されたため、HTMLを再取得: ${url}`);
+        logger.info(`--force-fetchが指定されたため、HTMLを再取得: ${url}`);
       }
     }
 
@@ -31,22 +32,22 @@ async function getHTML(url: string, forceFetch: boolean = false): Promise<string
 
     return html;
   } catch (error) {
-    console.error(`HTMLの取得中にエラーが発生: ${url}`, error);
-    return null;
+    logger.error(`HTMLの取得中にエラーが発生: ${url}`);
+    throw new Error(`Failed to fetch HTML for ${url}: ${error}`);
   }
 }
 
 async function crawlPage(url: string, depth: number = 2, allowedDomains: string[] = [], currentDepth: number = 1, forceFetch: boolean = false): Promise<SitemapEntry[]> {
   try {
-    console.log(`Crawling ${url} at depth ${currentDepth}`);
+    logger.info(`Crawling ${url} at depth ${currentDepth}`);
     const html = await getHTML(url, forceFetch);
     if (!html) {
-      console.error(`Failed to fetch HTML for ${url}`);
+      logger.error(`Failed to fetch HTML for ${url}`);
       return [];
     }
 
     if (currentDepth > depth) {
-      console.log(`Reached maximum depth of ${depth} at ${url}`);
+      logger.info(`Reached maximum depth of ${depth} at ${url}`);
       return [];
     }
 
@@ -86,15 +87,15 @@ async function crawlPage(url: string, depth: number = 2, allowedDomains: string[
           }
         }
       } catch (error) {
-        console.error(`Error processing link ${link.url} :`, error);
+        logger.error(`Error processing link ${link.url} : ${error}`);
       }
     }
 
-    console.log(`Found ${links.length} links on ${url}`);
+    logger.info(`Found ${links.length} links on ${url}`);
     return links;
 
   } catch (error) {
-    console.error(`Error crawling page ${url}:`, error);
+    logger.error(`Error crawling page ${url}: ${error}`);
     return [];
   }
 }
