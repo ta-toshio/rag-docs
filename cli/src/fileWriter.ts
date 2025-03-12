@@ -8,18 +8,12 @@ async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
     const outputPath = path.join('output', domain);
     const filepath = path.join(outputPath, 'sitemap.json');
 
-    console.log(`outputPath: ${outputPath}`);
-
     fs.mkdirSync(outputPath, { recursive: true });
     try {
       fs.writeFileSync(filepath, JSON.stringify(sitemap, null, 2));
     } catch (e) {
       console.error(`writeFileSync error: ${e}`);
     }
-
-    console.log(`filepath: ${filepath}`);
-
-    console.log(`サイトマップを保存: ${filepath}`);
   } catch (error) {
     console.error(`サイトマップの保存中にエラーが発生:`, error);
   }
@@ -32,7 +26,8 @@ async function writeFile(data: string, url: string, subDirectory: string, fileEx
     const pathDir = path.dirname(urlObj.pathname);
     const parentDir = path.basename(pathDir); // 空文字列でも許容
     const outputPath = path.join('output', domain, subDirectory, parentDir);
-    const filename = path.basename(urlObj.pathname).replace('.html', '');
+    const filename = path.basename(urlObj.pathname).replace('.html', '') || 'index';
+    console.log(`filename: ${filename}`);
     const filepath = path.join(outputPath, `${filename}.${fileExtension}`);
 
     fs.mkdirSync(outputPath, { recursive: true });
@@ -52,4 +47,8 @@ async function saveTranslationToFile(translatedText: string, url: string): Promi
   await writeFile(translatedText, url, 'translation', 'md');
 }
 
-export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile };
+async function saveSumarizationToFile(summary: string, url: string): Promise<void> {
+  await writeFile(summary, url, 'summary', 'md');
+}
+
+export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSumarizationToFile };

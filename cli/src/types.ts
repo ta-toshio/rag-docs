@@ -11,3 +11,9 @@ export interface SitemapEntry {
   title: string;
   fetch: boolean;
 }
+
+export interface HtmlContentEntry {
+  path: string;
+  url: string;
+  htmlContent: string;
+}

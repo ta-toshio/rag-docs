@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { saveSitemapToFile } from './fileWriter';
+import { saveSitemapToFile, saveSummaryToFile } from './fileWriter';
 import { describe, expect, it } from 'vitest';
 
 describe('saveSitemapToFile', () => {
@@ -23,5 +23,21 @@ describe('saveSitemapToFile', () => {
 
     const savedSitemap = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
     expect(savedSitemap).toEqual(sitemap);
+  });
+});
+
+describe('saveSummaryToFile', () => {
+  it('should save the summary to a markdown file', async () => {
+    const url = 'https://example.com/test-page';
+    const summaryContent = '# Summary of Test Page';
+    const parsedUrl = new URL(url);
+    const domain = parsedUrl.hostname;
+    const filename = path.basename(parsedUrl.pathname).replace('.html', '');
+    const outputPath = path.join('output', domain, 'summary', filename + '.md');
+
+    await saveSummaryToFile(summaryContent, url);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    expect(fs.readFileSync(outputPath, 'utf-8')).toBe(summaryContent);
   });
 });

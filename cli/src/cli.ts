@@ -11,7 +11,7 @@ import { translate } from './translator';
 import { summarize } from './summarizer';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
-import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile } from './fileWriter';
+import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSumarizationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
 import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
 import { LanguageName, getLanguageName, LanguageCode, isValidLanguageCode } from './types/language';
@@ -45,10 +45,10 @@ program.command('url')
       console.log(`saveSitemapToFile url: ${url}`);
       const sortedSitemap = sortByDirectory(sitemap, url);
       await saveSitemapToFile(sortedSitemap, url);
-      console.log(JSON.stringify(sortedSitemap, null, 2));
+      // console.log(JSON.stringify(sortedSitemap, null, 2));
 
       const htmlContents = await readHtmlFiles(url);
-      console.log(`HTML Contents: ${htmlContents.length} files`);
+      // console.log(`HTML Contents: ${htmlContents.length} files`);
 
       if (htmlContents.length <= 0) {
         console.log('No HTML contents to process.');
@@ -63,31 +63,36 @@ program.command('url')
         }
 
         const markdown = htmlToMarkdown(dom);
-        console.log(`Markdown: ${markdown.substring(0, 100)}...`);
+        // console.log(`Markdown: ${markdown.substring(0, 100)}...`);
+        console.log(`item.path: ${item.path}`);
         await saveMarkdownToFile(markdown, item.url);
-        console.log(`DOM: Parsed successfully`);
+        // console.log(`DOM: Parsed successfully`);
 
-        let summarizedText, translatedText;
+        let summarization, translatation;
 
         if (options.summaryOnly) {
-          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-          console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+          // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
         }
 
         if (options.translateOnly) {
-          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-          console.log(`Translated: ${translatedText.translatedText.substring(0, 100)}...`);
+          translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+          // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
         }
 
         if (!options.summaryOnly && !options.translateOnly) {
           console.log("Both summary and translation are enabled.");
-          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-          console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
-          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-          console.log(`Translated: ${translatedText.translatedText.substring(0, 100)}...`);
+          summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+          // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+          // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
         }
-        if (translatedText?.translatedText) {
-          await saveTranslationToFile(translatedText.translatedText, item.url);
+        if (translatation?.translatedText) {
+          await saveTranslationToFile(translatation.translatedText, item.url);
+        }
+
+        if (summarization?.summary) {
+          await saveSumarizationToFile(summarization.summary, item.url);
         }
       }
     } catch (error) {

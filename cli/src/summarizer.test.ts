@@ -55,8 +55,6 @@ describe("summarize", () => {
     expect(result).toHaveProperty("keywords");
     expect(result.keywords).toBeInstanceOf(Array);
     expect(result.keywords.length).toBeGreaterThan(0);
-
-    console.log(result);
   });
 
   it("should return valid summary structure for English", async () => {
