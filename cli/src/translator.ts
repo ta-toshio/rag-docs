@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
@@ -103,7 +104,7 @@ export const translate = async (
     const resText = await res.response.text();
     return extractValidJson(resText);
   } catch (error) {
-    console.error("JSON解析エラー:", error);
-    throw new Error("解析に失敗しました");
+    logger.error(`Translation failed: ${error}`);
+    throw new Error(`Translation failed: ${error}`);
   }
 };

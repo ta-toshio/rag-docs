@@ -1,5 +1,5 @@
+import { logger } from "./logger";
 // Google Gemini APIで要約
-
 import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
@@ -171,11 +171,11 @@ ${content}
     // Gemini API にリクエスト
     const res = await schemaModel.generateContent(prompt);
     const resText = await res.response.text();
-    
+
     // JSON のパースと整合性チェック
     return extractValidJson(resText);
   } catch (error) {
-    console.error("JSON解析エラー:", error);
-    throw new Error("解析に失敗しました");
+    logger.error(`Summarization failed: ${error}`);
+    throw new Error("Summarization failed");
   }
 };

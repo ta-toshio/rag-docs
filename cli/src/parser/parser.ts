@@ -6,6 +6,7 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
 import { HtmlContentEntry, SitemapEntry } from '../types';
+import { logger } from '../logger';
 
 export function processImagesAndLinks(html: string): string {
   // TODO: 画像とリンクの処理を実装
@@ -66,13 +67,14 @@ export async function readHtmlFiles(url: string): Promise<HtmlContentEntry[]> {
   }
 }
 
+
 export function parseHtmlToDOM(html: string): CheerioAPI {
   try {
     const $ = cheerio.load(html);
     $('script, style, nav, footer, header').remove();
     return $;
   } catch (error) {
-    console.error(`Error parsing HTML to DOM: ${error}`);
-    return null as any; // TODO: null を返さないように修正する
+    logger.error(`Error parsing HTML to DOM: ${error}`);
+    throw new Error(`Failed to parse HTML: ${error}`);
   }
 }

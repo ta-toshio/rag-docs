@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import { logger } from './logger';
 import 'dotenv/config';
 import { Command, Option } from 'commander';
 import { downloadDocument } from './fileProcessor';
@@ -56,9 +56,11 @@ program.command('url')
       }
 
       for (const item of htmlContents) {
-        const dom = parseHtmlToDOM(item.htmlContent);
-        if (!dom) {
-          console.log(`DOM: Failed to parse`);
+        let dom;
+        try {
+          dom = parseHtmlToDOM(item.htmlContent);
+        } catch (error) {
+          logger.error(`Failed to parse HTML for ${item.url}: ${error}`);
           continue;
         }
 
@@ -71,21 +73,37 @@ program.command('url')
         let summarization, translatation;
 
         if (options.summaryOnly) {
-          summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-          // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          try {
+            summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+            // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          } catch (error) {
+            logger.error(`Summarization error: ${error}`);
+          }
         }
 
         if (options.translateOnly) {
-          translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-          // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+          try {
+            translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+            // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+          } catch (error) {
+            console.error(`Translation error: ${error}`);
+          }
         }
 
         if (!options.summaryOnly && !options.translateOnly) {
           console.log("Both summary and translation are enabled.");
-          summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-          // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
-          translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-          // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+          try {
+            summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+            // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          } catch (error) {
+            logger.error(`Summarization error: ${error}`);
+          }
+          try {
+            translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+            // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+          } catch (error) {
+            logger.error(`Translation error: ${error}`);
+          }
         }
         if (translatation?.translatedText) {
           await saveTranslationToFile(translatation.translatedText, item.url);
@@ -96,7 +114,7 @@ program.command('url')
         }
       }
     } catch (error) {
-      console.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
