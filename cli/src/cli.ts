@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'dotenv/config';
 import { Command, Option } from 'commander';
 import { downloadDocument } from './fileProcessor';
 import { parseHtmlToDOM } from './parser/parser';
@@ -10,9 +11,10 @@ import { translate } from './translator';
 import { summarize } from './summarizer';
 import { crawlPage, getHTML } from './crawler/crawler';
 import { SitemapEntry } from './types';
-import { saveSitemapToFile, saveMarkdownToFile } from './fileWriter';
+import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
 import { getHtmlFilePathsFromSitemap, readHtmlFiles } from './parser/parser';
+import { LanguageName, getLanguageName, LanguageCode, isValidLanguageCode } from './types/language';
 
 const program = new Command();
 
@@ -32,6 +34,11 @@ program.command('url')
   .addOption(new Option('--force-fetch', 'キャッシュを無視して再取得'))
   .action(async (url: string, options: { depth: string, language: string, summaryOnly: boolean, translateOnly: boolean, allowDomains: string, forceFetch: boolean }) => {
     try {
+      if (!isValidLanguageCode(options.language)) {
+        throw new Error(`Invalid language code: ${options.language}`);
+      }
+      const languageName = getLanguageName(options.language);
+
       const allowedDomains = options.allowDomains ? options.allowDomains.split(',') : [];
       const normalizedBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
       const sitemap: SitemapEntry[] = await crawlPage(normalizedBaseUrl, parseInt(options.depth), allowedDomains, 1, options.forceFetch);
@@ -63,21 +70,24 @@ program.command('url')
         let summarizedText, translatedText;
 
         if (options.summaryOnly) {
-          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown)));
-          console.log(`Summarized: ${summarizedText.substring(0, 100)}...`);
+          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+          console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
         }
 
         if (options.translateOnly) {
-          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, options.language)));
-          console.log(`Translated: ${translatedText.substring(0, 100)}...`);
+          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+          console.log(`Translated: ${translatedText.translatedText.substring(0, 100)}...`);
         }
 
         if (!options.summaryOnly && !options.translateOnly) {
           console.log("Both summary and translation are enabled.");
-          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown)));
-          console.log(`Summarized: ${summarizedText.substring(0, 100)}...`);
-          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, options.language)));
-          console.log(`Translated: ${translatedText.substring(0, 100)}...`);
+          summarizedText = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+          console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+          translatedText = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+          console.log(`Translated: ${translatedText.translatedText.substring(0, 100)}...`);
+        }
+        if (translatedText?.translatedText) {
+          await saveTranslationToFile(translatedText.translatedText, item.url);
         }
       }
     } catch (error) {

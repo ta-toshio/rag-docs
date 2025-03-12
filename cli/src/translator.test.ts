@@ -1,7 +1,8 @@
-import { getLanguageName, translate } from './translator';
+import { translate } from './translator';
 import { describe, expect, it, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { getLanguageName } from './types/language';
 
 // モック: Google Generative AI API 呼び出しをシミュレート
 vi.mock("./genAIClient", () => ({

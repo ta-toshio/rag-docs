@@ -25,20 +25,31 @@ async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
   }
 }
 
-async function saveMarkdownToFile(markdown: string, url: string): Promise<void> {
+async function writeFile(data: string, url: string, subDirectory: string, fileExtension: string): Promise<void> {
   try {
-    const domain = path.dirname(url).split('/')[1]; // ドメイン名を取得
-    const outputPath = path.join('output', domain, 'markdown', path.basename(path.dirname(url)));
-    const filename = path.basename(url).replace('.html', '');
-    const filepath = path.join(outputPath, `${filename}.md`);
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname;
+    const pathDir = path.dirname(urlObj.pathname);
+    const parentDir = path.basename(pathDir); // 空文字列でも許容
+    const outputPath = path.join('output', domain, subDirectory, parentDir);
+    const filename = path.basename(urlObj.pathname).replace('.html', '');
+    const filepath = path.join(outputPath, `${filename}.${fileExtension}`);
 
     fs.mkdirSync(outputPath, { recursive: true });
-    fs.writeFileSync(filepath, markdown, 'utf-8');
+    fs.writeFileSync(filepath, data, 'utf-8');
 
-    console.log(`Markdown ファイルを保存: ${filepath}`);
+    console.log(`${subDirectory} ファイルを保存: ${filepath}`);
   } catch (error) {
-    console.error(`Markdown ファイルの保存中にエラーが発生:`, error);
+    console.error(`${subDirectory} ファイルの保存中にエラーが発生:`, error);
   }
 }
 
-export { saveSitemapToFile, saveMarkdownToFile };
+async function saveMarkdownToFile(markdown: string, url: string): Promise<void> {
+  await writeFile(markdown, url, 'markdown', 'md');
+}
+
+async function saveTranslationToFile(translatedText: string, url: string): Promise<void> {
+  await writeFile(translatedText, url, 'translation', 'md');
+}
+
+export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile };

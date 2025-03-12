@@ -3,7 +3,7 @@
 import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
-import { LanguageName } from "./translator";
+import { LanguageName } from "./types/language";
 
 // 分析結果の型定義
 interface SummarizationResult {
@@ -52,7 +52,7 @@ const schema: ResponseSchema = {
       },
     },
 
-    // **Step 3: 初回要約**
+    // **Step 3: 初回要約（description）**
     description: {
       type: SchemaType.STRING,
       description: "1000文字以内の初回要約。文書の概要を簡潔にまとめたもの。",
@@ -87,7 +87,7 @@ const schema: ResponseSchema = {
       },
     },
 
-    // **Step 5: 最終要約**
+    // **Step 5: 最終要約（summary）**
     summary: {
       type: SchemaType.STRING,
       description: "3000文字以内の最終要約。Step 4 で検証・精査した技術要点を反映し、" +

@@ -1,6 +1,7 @@
 import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
+import { LanguageName } from "./types/language";
 
 // 型定義
 interface TranslationResult {
@@ -12,45 +13,6 @@ interface TranslationResult {
 
 // 翻訳スタイルの型を定義
 type TranslationStyle = "formal" | "technical" | "simplified";
-
-// ISO 639-1 言語コードのリスト
-export type LanguageCode =
-  | "ja"
-  | "en"
-  | "fr"
-  | "de"
-  | "es"
-  | "zh"
-  | "zh_tw"
-  | "ko"; // 必要なら追加可能
-
-// 言語名のリテラル型
-export type LanguageName =
-  | "Japanese"
-  | "English"
-  | "French"
-  | "German"
-  | "Spanish"
-  | "Chinese (Simplified)"
-  | "Chinese (Traditional)"
-  | "Korean";
-
-// 言語コードマップ
-const languageMap: Record<LanguageCode, LanguageName> = {
-  ja: "Japanese",
-  en: "English",
-  fr: "French",
-  de: "German",
-  es: "Spanish",
-  zh: "Chinese (Simplified)",
-  zh_tw: "Chinese (Traditional)",
-  ko: "Korean",
-};
-
-// 型安全な言語名取得関数
-export const getLanguageName = (code: LanguageCode): LanguageName => {
-  return languageMap[code as LanguageCode]; // 不明な言語は "Unknown" にフォールバック
-};
 
 // 翻訳関数
 export const translate = async (

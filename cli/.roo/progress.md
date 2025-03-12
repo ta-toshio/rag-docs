@@ -33,7 +33,7 @@
 | 1  | **HTML 解析**    | **ダウンロードした HTML を読み込む** | `output/sample.com/html/` 内の HTML を読み込む | `src/parser/parser.ts` | `toMarkdown.md` |  | ✅ |
 | 2  |                  | **HTML を DOM にパースする** | `cheerio` などを使用して DOM ツリーを解析 | `src/parser/parser.ts` | `toMarkdown.md` |  | ✅ |
 | 3  |                  | **不要なスクリプト・スタイルを除外** | `script` / `style` タグを削除 | `src/parser/parser.ts` | `toMarkdown.md` |  | ✅ |
-| 4  |                  | **本文テキストを抽出する** | `main`, `article`, `p`, `h1~h6` などの要素を対象にテキストを取得 |  | |  | ❌ (対応しない) |
+| 4  |                  | **本文テキストを抽出する** | `main`, `article`, `p`, `h1~h6` などの要素を対象にテキストを取得 |  |  |  | ❌ (対応しない) |
 | 5  | **Markdown 変換** | **HTML を Markdown に変換** | `turndown` などを利用して Markdown に変換 | `src/parser/markdownFormatter.ts` | `toMarkdown.md` |  | ✅ |
 | 6  |                  | **リスト・表・コードブロックを適切に処理** | `ul`, `ol`, `table`, `pre` などを Markdown の書式に変換 | `src/parser/markdownFormatter.ts` | `toMarkdown.md` |  | ✅ |
 | 7  |                  | **Markdown のフォーマットを統一** | インデント・改行のルールを統一する | `src/parser/markdownFormatter.ts` | `markdownFormatter.md` |  | ✅ |
@@ -41,8 +41,8 @@
 | 9  | **レート制限・リトライ機能** | **Google Gemini API のレートリミット制御を実装** | **Bottleneck を利用し、リクエスト間隔を管理** | `src/utils/rateLimiter.ts` | `rateLimit.md` |  | ✅ |
 | 10 |                   | **翻訳 API・要約 API のリトライ処理を実装** | **エラーハンドリング & バックオフ制御を組み込む** | `src/utils/apiRetry.ts` |  |  | ✅ |
 | 11 | **翻訳処理**      | **Markdown を翻訳対象として読み込む** | | `src/translator.ts` |  |  | ✅ |
-| 12 |                  | **Google Gemini API を使用して翻訳を実施** | | `src/translator.ts` |  |  | ⏳ |
-| 13 |                  | **翻訳結果を `output/sample.com/translation/` に保存** | | `src/fileWriter.ts` |  |  | ⏳ |
+| 12 |                  | **Google Gemini API を使用して翻訳を実施** | | `src/translator.ts` |  |  | ✅ |
+| 13 |                  | **翻訳結果を `output/sample.com/translation/` に保存** | | `src/fileWriter.ts` |  |  | ✅ |
 | 14 | **要約処理**      | **Markdown を要約対象として読み込む** | | `src/summarizer.ts` |  |  | ⏳ |
 | 15 |                  | **Google Gemini API を使用して要約を実施** | | `src/summarizer.ts` |  |  | ⏳ |
 | 16 |                  | **要約結果を `output/sample.com/summary/` に保存** | | `src/fileWriter.ts` |  |  | ⏳ |

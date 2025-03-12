@@ -2,7 +2,7 @@ import { summarize } from "./summarizer";
 import { describe, expect, it, vi } from "vitest";
 import fs from "fs";
 import path from "path";
-import { getLanguageName } from "./translator";
+import { getLanguageName } from './types/language';
 
 // モック: Google Generative AI API のレスポンスをシミュレート
 // APIを実行したい場合は、コメントアウトしてください
