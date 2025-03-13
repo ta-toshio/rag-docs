@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "@qdrant/js-client-rest": "^1.13.0",
     "axios": "^1.8.2",
+    "better-sqlite3": "^11.8.1",
     "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0",
     "commander": "^13.1.0",
