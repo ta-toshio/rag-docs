@@ -44,10 +44,10 @@ program.command('url')
       logger.info(`saveSitemapToFile url: ${url}`);
       const sortedSitemap = sortByDirectory(sitemap, url);
       await saveSitemapToFile(sortedSitemap, url);
-      // console.log(JSON.stringify(sortedSitemap, null, 2));
+      // logger.log(JSON.stringify(sortedSitemap, null, 2));
 
       const htmlContents = await readHtmlFiles(url);
-      // console.log(`HTML Contents: ${htmlContents.length} files`);
+      // logger.log(`HTML Contents: ${htmlContents.length} files`);
 
       if (htmlContents.length <= 0) {
         logger.info('No HTML contents to process.');
@@ -67,14 +67,14 @@ program.command('url')
         // logger.info(`Markdown: ${markdown.substring(0, 100)}...`);
         logger.info(`item.path: ${item.path}`);
         await saveMarkdownToFile(markdown, item.url);
-        // console.log(`DOM: Parsed successfully`);
+        // logger.log(`DOM: Parsed successfully`);
 
         let summarization, translatation;
 
         if (options.summaryOnly) {
           try {
             summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-            // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+            // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Summarization error: ${error}`);
           }
@@ -83,23 +83,22 @@ program.command('url')
         if (options.translateOnly) {
           try {
             translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-            // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+            // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
           } catch (error) {
-            console.error(`Translation error: ${error}`);
+            logger.error(`Translation error: ${error}`);
           }
         }
 
         if (!options.summaryOnly && !options.translateOnly) {
-          console.log("Both summary and translation are enabled.");
           try {
             summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
-            // console.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
+            // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Summarization error: ${error}`);
           }
           try {
             translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
-            // console.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
+            // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Translation error: ${error}`);
           }

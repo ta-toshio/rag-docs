@@ -16,7 +16,7 @@ async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
       logger.error(`writeFileSync error: ${e}`);
     }
   } catch (error) {
-    logger.error(`サイトマップの保存中にエラーが発生:`, error);
+    logger.error(`サイトマップの保存中にエラーが発生: ${error}`);
   }
 }
 
