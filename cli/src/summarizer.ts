@@ -4,26 +4,7 @@ import { logger } from "./logger";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
 import { LanguageName } from "./domain/language";
-
-// 分析結果の型定義
-interface SummarizationResult {
-  noises: string[];
-  claims: {
-    text: string;
-    source?: string;
-    evidence: string;
-    certainty: string;
-  }[];
-  claimValidation: {
-    claim: string;
-    relevance: string;
-    insights: string[];
-    suggestions: string[];
-  }[],
-  summary: string;
-  title: string;
-  keywords: string[];
-}
+import { SummarizationResult } from "./domain/summarization";
 
 const schema: ResponseSchema = {
   description: "公式ドキュメントの要約解析結果",

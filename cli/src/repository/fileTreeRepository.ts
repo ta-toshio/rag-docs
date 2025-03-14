@@ -12,7 +12,7 @@ export class FileTreeRepository {
 
   private initializeTable(): void {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS file_tree (
+      CREATE TABLE IF NOT EXISTS file_tree_collection (
         id TEXT PRIMARY KEY,
         resource_id TEXT NOT NULL UNIQUE,
         domain TEXT NOT NULL,
@@ -28,7 +28,7 @@ export class FileTreeRepository {
 
   public registerFileTreeEntry(entry: FileTreeEntry): void {
     const stmt = this.db.prepare(`
-      INSERT INTO file_tree (
+      INSERT INTO file_tree_collection (
         id,
         resource_id,
         domain,
@@ -59,7 +59,7 @@ export class FileTreeRepository {
 
     if (existingEntry) {
       const stmt = this.db.prepare(`
-        UPDATE file_tree SET
+        UPDATE file_tree_collection SET
           resource_id = @resource_id,
           domain = @domain,
           name = @name,
@@ -74,7 +74,7 @@ export class FileTreeRepository {
       logger.info(`Updated file tree entry with resource_id: ${entry.resource_id}`);
     } else {
       const stmt = this.db.prepare(`
-        INSERT INTO file_tree (
+        INSERT INTO file_tree_collection (
           id,
           resource_id,
           domain,
@@ -102,13 +102,13 @@ export class FileTreeRepository {
   }
 
   private getFileTreeEntryByResourceId(resource_id: string): FileTreeEntry | null {
-    const stmt = this.db.prepare('SELECT * FROM file_tree WHERE resource_id = ?');
+    const stmt = this.db.prepare('SELECT * FROM file_tree_collection WHERE resource_id = ?');
     const result = stmt.get(resource_id);
     return result ? result as FileTreeEntry : null;
   }
 
   public getFileTreeEntryById(id: string): FileTreeEntry | null {
-    const stmt = this.db.prepare('SELECT * FROM file_tree WHERE id = ?');
+    const stmt = this.db.prepare('SELECT * FROM file_tree_collection WHERE id = ?');
     const result = stmt.get(id);
     return result ? result as FileTreeEntry : null;
   }

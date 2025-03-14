@@ -21,6 +21,7 @@ describe('FileTreeHandler', () => {
       type: 'file',
       path: '/path/to/file',
       parent: null,
+      sort_order: 0,
       timestamp: new Date().toISOString()
     };
 
@@ -44,6 +45,7 @@ describe('FileTreeHandler', () => {
       type: 'file',
       path: '/path/to/file2',
       parent: null,
+      sort_order: 0,
       timestamp: new Date().toISOString()
     };
 
@@ -61,6 +63,7 @@ describe('FileTreeHandler', () => {
       type: 'file',
       path: '/path/to/file3',
       parent: null,
+      sort_order: 0,
       timestamp: new Date().toISOString()
     };
 

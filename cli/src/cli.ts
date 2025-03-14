@@ -4,6 +4,7 @@ import { Command, Option } from 'commander';
 import { logger } from './logger';
 import { initializeDatabase } from './databaseConnection';
 import { FileTreeRepository } from './repository/fileTreeRepository';
+import { TranslationRepository } from './repository/translationRepository';
 import { parseHtmlToDOM } from './parser/parser';
 import { htmlToMarkdown } from './parser/markdownFormatter';
 import { rateLimitedRequest } from './utils/rateLimiter';
@@ -20,10 +21,13 @@ import { getFilePath, getHtmlFilePath, getMarkdownFilePath, getSummarizationFile
 import { readFile } from './fileReader';
 import path from 'path';
 import { factoryFileTreeEntry } from './domain/fileTreeEntry';
+import { factoryTranslationEntry, TranslationEntry } from './domain/translationEntry';
+import { v7 as uuidv7 } from 'uuid';
 
 // Initialize database and handlers
 const db = initializeDatabase();
 const fileTreeHandler = new FileTreeRepository(db);
+const translationHandler = new TranslationRepository(db);
 
 const program = new Command();
 
@@ -41,7 +45,7 @@ program.command('url')
   .addOption(new Option('--translate-only', '翻訳のみ実行'))
   .addOption(new Option('--allow-domains <domains>', '許可ドメインの指定'))
   .addOption(new Option('--force-fetch', 'キャッシュを無視して再取得'))
-  .action(async (url: string, options: { depth: string, language: string, summaryOnly: boolean, translateOnly: boolean, allowDomains: string, forceFetch: boolean }) => {
+  .action(async (url, options) => {
     try {
       if (!isValidLanguageCode(options.language)) {
         throw new Error(`Invalid language code: ${options.language}`);
@@ -84,7 +88,6 @@ program.command('url')
             return reject();
           }
 
-          /*
           const markdown = htmlToMarkdown(dom);
 
           const markdownFilePath = getMarkdownFilePath(entry.url);
@@ -121,7 +124,6 @@ program.command('url')
               );
             } catch (error) {
               logger.error(`Summarization error: ${error}`);
-              return reject();
             }
 
             try {
@@ -130,29 +132,34 @@ program.command('url')
               );
             } catch (error) {
               logger.error(`Translation error: ${error}`);
-              return reject();
             }
           }
+
           const translationFilePath = getTranslationFilePath(entry.url);
           const summarizationFilePath = getSummarizationFilePath(entry.url);
 
-          if (translatation?.translatedText) {
-            await saveTranslationToFile(translatation.translatedText,translationFilePath);
+          if (!translatation || !summarization) {
+            return reject();
           }
 
-          if (summarization?.summary) {
-            await saveSummarizationToFile(summarization.summary, summarizationFilePath);
-          }
+          await Promise.all([
+            saveTranslationToFile(translatation.translatedText, translationFilePath),
+            saveSummarizationToFile(summarization.summary, summarizationFilePath)
+          ]);
 
           // save fileTree entry
-
-
-          // save tranlation entry
-
-          */
-
           const fileTreeEntry = factoryFileTreeEntry(entry.url, entry.title, index);
           fileTreeHandler.upsertFileTreeEntry(fileTreeEntry);
+
+          // save tranlation entry
+          const translationEntry: TranslationEntry = factoryTranslationEntry(
+            entry.url,
+            translatation,
+            summarization,
+            markdown,
+            languageName
+          )
+          translationHandler.upsertTranslationEntry(translationEntry);
 
           return resolve(true);
 
@@ -250,7 +257,7 @@ program.command('input')
   .addOption(new Option('--language <lang>', '翻訳言語').default('ja'))
   .addOption(new Option('--summary-only', '要約のみ実行'))
   .addOption(new Option('--translate-only', '翻訳のみ実行'))
-  .action((options: { language: string, summaryOnly: boolean, translateOnly: boolean }) => {
+  .action((options) => {
     logger.info(`Input Options: ${JSON.stringify(options)}`);
   });
 

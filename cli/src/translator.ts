@@ -3,14 +3,8 @@ import { logger } from "./logger";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
 import { LanguageName } from "./domain/language";
+import { TranslationResult } from "./domain/translation";
 
-// 型定義
-interface TranslationResult {
-  claims: string[];
-  terminology: { term: string; translation: string }[];
-  translationStyle: "formal" | "technical" | "simplified";
-  translatedText: string;
-}
 
 // 翻訳スタイルの型を定義
 type TranslationStyle = "formal" | "technical" | "simplified";
