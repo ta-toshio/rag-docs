@@ -2,7 +2,7 @@ import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { logger } from "./logger";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
-import { LanguageName } from "./types/language";
+import { LanguageName } from "./domain/language";
 
 // 型定義
 interface TranslationResult {
@@ -96,7 +96,7 @@ export const translate = async (
     required: ["claims", "terminology", "translationStyle", "translatedText"],
   };
 
-  
+
   const schemaModel = model(schema);
 
   try {

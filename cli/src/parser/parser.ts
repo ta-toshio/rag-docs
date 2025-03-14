@@ -5,36 +5,16 @@ import fs from 'fs';
 import path from 'path';
 import * as cheerio from 'cheerio';
 import { CheerioAPI } from 'cheerio';
-import { HtmlContentEntry, SitemapEntry } from '../types';
+import { HtmlContentEntry, SitemapEntry } from '../domain/types';
 import { logger } from '../logger';
+import { getHtmlFilePathsFromSitemap } from '../path';
 
 export function processImagesAndLinks(html: string): string {
   // TODO: 画像とリンクの処理を実装
   return html;
 }
 
-export function getHtmlFilePathsFromSitemap(sitemapPath: string): 
-  {
-    path: string,
-    url: string,
-    fetch: boolean
-  }[] {
-  try {
-    const sitemapJson = fs.readFileSync(sitemapPath, 'utf-8');
-    const sitemap: SitemapEntry[] = JSON.parse(sitemapJson);
-    return sitemap.map(entry => {
-      const parsedUrl = new URL(entry.url);
-      const domain = parsedUrl.hostname;
-      const outputPath = path.join('output', domain, 'html', parsedUrl.pathname);
-      const filename = path.basename(parsedUrl.pathname) || 'index';
-      const filepath = path.join(outputPath, `${filename}.html`);
-      return { path: filepath, url: entry.url, fetch: entry.fetch };
-    });
-  } catch (error) {
-    console.error(`Error reading or parsing sitemap.json: ${error}`);
-    return [];
-  }
-}
+
 
 export async function readHtmlFiles(url: string): Promise<HtmlContentEntry[]> {
   try {
@@ -68,13 +48,13 @@ export async function readHtmlFiles(url: string): Promise<HtmlContentEntry[]> {
 }
 
 
-export function parseHtmlToDOM(html: string): CheerioAPI {
+export function parseHtmlToDOM(html: string): CheerioAPI | null {
   try {
     const $ = cheerio.load(html);
     $('script, style, nav, footer, header').remove();
     return $;
   } catch (error) {
     logger.error(`Error parsing HTML to DOM: ${error}`);
-    throw new Error(`Failed to parse HTML: ${error}`);
+    return null;
   }
 }

@@ -42,7 +42,8 @@ CREATE TABLE file_tree_collection (
   type TEXT CHECK(type IN ('file', 'folder')) NOT NULL, -- ファイル or フォルダ
   path TEXT NOT NULL,   -- 完全パス (/docs/setup など)
   parent TEXT,          -- 親フォルダのパス (ルートなら NULL)
-  timestamp TEXT NOT NULL -- 登録日時 (ISO8601)
+  timestamp TEXT NOT NULL, -- 登録日時 (ISO8601)
+  sort_order INTEGER NOT NULL DEFAULT 0 -- ソート順
 );
 ```
 
@@ -62,9 +63,9 @@ export interface FileTreeEntry {
   path: string;
   parent: string | null;
   timestamp: string;
+  sort_order: number;
 }
 ```
-
 #### **データ例**
 
 ```json
@@ -77,9 +78,11 @@ export interface FileTreeEntry {
     "type": "file",
     "path": "/docs/setup",
     "parent": "/docs",
-    "timestamp": "2025-03-12T12:00:00Z"
+    "timestamp": "2025-03-12T12:00:00Z",
+    "sort_order": 0
   }
 ]
+```
 ```
 
 ---

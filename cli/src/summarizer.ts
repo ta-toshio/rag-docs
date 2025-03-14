@@ -3,7 +3,7 @@ import { ResponseSchema, SchemaType } from "@google/generative-ai";
 import { logger } from "./logger";
 import { model } from "./genAIClient";
 import { extractValidJson } from "./utils/generateStructuredContent";
-import { LanguageName } from "./types/language";
+import { LanguageName } from "./domain/language";
 
 // 分析結果の型定義
 interface SummarizationResult {

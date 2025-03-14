@@ -1,20 +1,16 @@
 import fs from 'fs';
-import path from 'path';
 import { URL } from 'url';
 import * as cheerio from 'cheerio';
 import { logger } from '../logger';
-import { SitemapEntry } from '../types';
+import { SitemapEntry } from '../domain/types';
 import { fetchHTML, saveHTMLToFile } from './htmlUtils';
-import { processLink } from './linkProcessor';
+import { validateLink } from './linkProcessor';
 import { normalizeUrl } from './urlUtils';
+import { getHtmlFilePath } from '../path';
 
 async function getHTML(url: string, forceFetch: boolean = false): Promise<string | null> {
   try {
-    const parsedUrl = new URL(url);
-    const domain = parsedUrl.hostname;
-    const outputPath = path.join('output', domain, 'html', parsedUrl.pathname);
-    const filename = path.basename(parsedUrl.pathname) || 'index';
-    const filepath = path.join(outputPath, `${filename}.html`);
+    const filepath = getHtmlFilePath(url);
 
     if (!forceFetch && fs.existsSync(filepath)) {
       logger.info(`キャッシュからHTMLを取得: ${url}`);
@@ -37,7 +33,13 @@ async function getHTML(url: string, forceFetch: boolean = false): Promise<string
   }
 }
 
-async function crawlPage(url: string, depth: number = 2, allowedDomains: string[] = [], currentDepth: number = 1, forceFetch: boolean = false): Promise<SitemapEntry[]> {
+async function crawlPage(
+  url: string,
+  depth: number = 2,
+  allowedDomains: string[] = [],
+  currentDepth: number = 1,
+  forceFetch: boolean = false
+): Promise<SitemapEntry[]> {
   try {
     logger.info(`Crawling ${url} at depth ${currentDepth}`);
     const html = await getHTML(url, forceFetch);
@@ -63,8 +65,8 @@ async function crawlPage(url: string, depth: number = 2, allowedDomains: string[
     for (let element of elements) {
       const href = $(element).attr('href');
       if (!href) continue;
-      const link = processLink(href, url, depth, currentDepth, allowedDomains);
-      if (link) {
+      const link = validateLink(href, url, depth, currentDepth, allowedDomains);
+      if (link && link.fetch) {
         const normalizedLinkUrl = normalizeUrl(link.url);
         if (!uniqueUrls.has(normalizedLinkUrl)) {
           uniqueUrls.add(normalizedLinkUrl);
@@ -76,14 +78,18 @@ async function crawlPage(url: string, depth: number = 2, allowedDomains: string[
     for (let link of links) {
       try {
         const absoluteUrl = new URL(link.url, url).toString();
-        if (absoluteUrl.startsWith(url) && currentDepth < depth) {
-          const nestedLinks = await crawlPage(absoluteUrl, depth, allowedDomains, currentDepth + 1, forceFetch);
-          for (let nestedLink of nestedLinks) {
-            const normalizedNestedLinkUrl = normalizeUrl(nestedLink.url);
-            if (!uniqueUrls.has(normalizedNestedLinkUrl)) {
-              uniqueUrls.add(normalizedNestedLinkUrl);
-              links.push(nestedLink);
-            }
+        const nestedLinks = await crawlPage(
+          absoluteUrl,
+          depth,
+          allowedDomains,
+          currentDepth + 1,
+          forceFetch
+        );
+        for (let nestedLink of nestedLinks) {
+          const normalizedNestedLinkUrl = normalizeUrl(nestedLink.url);
+          if (!uniqueUrls.has(normalizedNestedLinkUrl)) {
+            uniqueUrls.add(normalizedNestedLinkUrl);
+            links.push(nestedLink);
           }
         }
       } catch (error) {
@@ -91,8 +97,7 @@ async function crawlPage(url: string, depth: number = 2, allowedDomains: string[
       }
     }
 
-    logger.info(`Found ${links.length} links on ${url}`);
-    return links;
+    return links.filter(link => link.fetch);
 
   } catch (error) {
     logger.error(`Error crawling page ${url}: ${error}`);

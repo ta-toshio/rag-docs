@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import { Command, Option } from 'commander';
 import { logger } from './logger';
+import { initializeDatabase } from './databaseConnection';
+import { FileTreeRepository } from './repository/fileTreeRepository';
 import { parseHtmlToDOM } from './parser/parser';
 import { htmlToMarkdown } from './parser/markdownFormatter';
 import { rateLimitedRequest } from './utils/rateLimiter';
@@ -9,11 +11,19 @@ import apiRetry from './utils/apiRetry';
 import { translate } from './translator';
 import { summarize } from './summarizer';
 import { crawlPage } from './crawler/crawler';
-import { SitemapEntry } from './types';
+import { SitemapEntry } from './domain/types';
 import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
 import { readHtmlFiles } from './parser/parser';
-import { getLanguageName, isValidLanguageCode } from './types/language';
+import { getLanguageName, isValidLanguageCode } from './domain/language';
+import { getFilePath, getHtmlFilePath, getMarkdownFilePath, getSummarizationFilePath, getTranslationFilePath } from './path';
+import { readFile } from './fileReader';
+import path from 'path';
+import { factoryFileTreeEntry } from './domain/fileTreeEntry';
+
+// Initialize database and handlers
+const db = initializeDatabase();
+const fileTreeHandler = new FileTreeRepository(db);
 
 const program = new Command();
 
@@ -40,17 +50,125 @@ program.command('url')
 
       const allowedDomains = options.allowDomains ? options.allowDomains.split(',') : [];
       const normalizedBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-      const sitemap: SitemapEntry[] = await crawlPage(normalizedBaseUrl, parseInt(options.depth), allowedDomains, 1, options.forceFetch);
+      const sitemap: SitemapEntry[] = await crawlPage(
+        normalizedBaseUrl,
+        parseInt(options.depth),
+        allowedDomains,
+        1,
+        options.forceFetch
+      );
       logger.info(`saveSitemapToFile url: ${url}`);
-      const sortedSitemap = sortByDirectory(sitemap, url);
-      await saveSitemapToFile(sortedSitemap, url);
-      // logger.log(JSON.stringify(sortedSitemap, null, 2));
 
+      const sortedSitemap: SitemapEntry[] = sortByDirectory(sitemap, url);
+
+      await saveSitemapToFile(sortedSitemap, url);
+      // logger.info(JSON.stringify(sortedSitemap, null, 2));
+
+      const promises = [];
+      for (const [index, entry] of sortedSitemap.entries()) {
+
+        const promies = new Promise(async (resolve, reject) => {
+
+          logger.info(`entry.url: ${entry.url}`);
+          // console.log(getFilePath(entry.url, 'html', 'html'));
+          const htmlFilePath = getHtmlFilePath(entry.url);
+          const htmlContent = await readFile(htmlFilePath);
+          if (!htmlContent) {
+            logger.error(`Failed to read HTML file: ${htmlFilePath}`);
+            return reject();
+          }
+
+          const dom = parseHtmlToDOM(htmlContent);
+          if (!dom) {
+            logger.error(`Failed to parse HTML for ${entry.url}`);
+            return reject();
+          }
+
+          /*
+          const markdown = htmlToMarkdown(dom);
+
+          const markdownFilePath = getMarkdownFilePath(entry.url);
+          await saveMarkdownToFile(markdown, markdownFilePath);
+
+          let summarization, translatation;
+
+          if (options.summaryOnly) {
+            try {
+              summarization = await apiRetry(
+                () => rateLimitedRequest(() => summarize(markdown, languageName))
+              );
+            } catch (error) {
+              logger.error(`Summarization error: ${error}`);
+              return reject();
+            }
+          }
+
+          if (options.translateOnly) {
+            try {
+              translatation = await apiRetry(
+                () => rateLimitedRequest(() => translate(markdown, languageName))
+              );
+            } catch (error) {
+              logger.error(`Translation error: ${error}`);
+              return reject();
+            }
+          }
+
+          if (!options.summaryOnly && !options.translateOnly) {
+            try {
+              summarization = await apiRetry(
+                () => rateLimitedRequest(() => summarize(markdown, languageName))
+              );
+            } catch (error) {
+              logger.error(`Summarization error: ${error}`);
+              return reject();
+            }
+
+            try {
+              translatation = await apiRetry(
+                () => rateLimitedRequest(() => translate(markdown, languageName))
+              );
+            } catch (error) {
+              logger.error(`Translation error: ${error}`);
+              return reject();
+            }
+          }
+          const translationFilePath = getTranslationFilePath(entry.url);
+          const summarizationFilePath = getSummarizationFilePath(entry.url);
+
+          if (translatation?.translatedText) {
+            await saveTranslationToFile(translatation.translatedText,translationFilePath);
+          }
+
+          if (summarization?.summary) {
+            await saveSummarizationToFile(summarization.summary, summarizationFilePath);
+          }
+
+          // save fileTree entry
+
+
+          // save tranlation entry
+
+          */
+
+          const fileTreeEntry = factoryFileTreeEntry(entry.url, entry.title, index);
+          fileTreeHandler.upsertFileTreeEntry(fileTreeEntry);
+
+          return resolve(true);
+
+        });
+
+        promises.push(promies);
+      };
+
+      await Promise.all(promises);
+
+      /*
       const htmlContents = await readHtmlFiles(url);
       // logger.log(`HTML Contents: ${htmlContents.length} files`);
 
       if (htmlContents.length <= 0) {
-        logger.info('No HTML contents to process.');
+        logger.info('No HTML contents to process. url: ' + url);
         return;
       }
 
@@ -65,7 +183,7 @@ program.command('url')
 
         const markdown = htmlToMarkdown(dom);
         // logger.info(`Markdown: ${markdown.substring(0, 100)}...`);
-        logger.info(`item.path: ${item.path}`);
+        // logger.info(`item.path: ${item.path}`);
         await saveMarkdownToFile(markdown, item.url);
         // logger.log(`DOM: Parsed successfully`);
 
@@ -73,7 +191,9 @@ program.command('url')
 
         if (options.summaryOnly) {
           try {
-            summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+            summarization = await apiRetry(
+              () => rateLimitedRequest(() => summarize(markdown, languageName))
+            );
             // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Summarization error: ${error}`);
@@ -82,7 +202,9 @@ program.command('url')
 
         if (options.translateOnly) {
           try {
-            translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+            translatation = await apiRetry(
+              () => rateLimitedRequest(() => translate(markdown, languageName))
+            );
             // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Translation error: ${error}`);
@@ -91,13 +213,17 @@ program.command('url')
 
         if (!options.summaryOnly && !options.translateOnly) {
           try {
-            summarization = await apiRetry(() => rateLimitedRequest(() => summarize(markdown, languageName)));
+            summarization = await apiRetry(
+              () => rateLimitedRequest(() => summarize(markdown, languageName))
+            );
             // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Summarization error: ${error}`);
           }
           try {
-            translatation = await apiRetry(() => rateLimitedRequest(() => translate(markdown, languageName)));
+            translatation = await apiRetry(
+              () => rateLimitedRequest(() => translate(markdown, languageName))
+            );
             // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
           } catch (error) {
             logger.error(`Translation error: ${error}`);
@@ -111,6 +237,9 @@ program.command('url')
           await saveSummarizationToFile(summarization.summary, item.url);
         }
       }
+      */
+
+
     } catch (error) {
       logger.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);
     }

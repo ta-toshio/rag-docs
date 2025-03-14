@@ -1,4 +1,4 @@
-import { SitemapEntry } from './types';
+import { SitemapEntry } from './domain/types';
 
 /**
  * entries の中から、rootUrl（例: "https://sample.com/docs/"）以下のエントリをグループ化して並び替え、

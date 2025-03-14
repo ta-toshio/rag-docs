@@ -123,18 +123,53 @@ Options:
 │   │   ├── summary/
 ├── src/
 │   ├── cli.ts           # CLI のエントリーポイント
-│   ├── fileProcessor.ts # ローカルファイルの処理
-│   ├── parser/        # HTML / テキスト → Markdown 変換
-│   │   ├── parser.ts
-│   │   ├── markdownFormatter.ts
-│   ├── translator.ts    # Google Gemini API で翻訳
-│   ├── summarizer.ts    # Google Gemini API で要約
-│   ├── fileWriter.ts    # Markdown の書き出し
-│   ├── utils/         # ユーティリティ関数
-│   │   ├── rateLimiter.ts   # API レート制限
-│   │   ├── apiRetry.ts
 │   ├── config.ts        # 設定・デフォルト値
-│   ├── types.ts         # 型定義
+│   ├── crawler/         # Webクローリング関連
+│   │   ├── crawler.test.ts  # クローラーのテスト
+│   │   ├── crawler.ts       # メインのクローラー
+│   │   ├── htmlUtils.ts     # HTML処理ユーティリティ
+│   │   ├── linkProcessor.ts # リンク処理
+│   │   └── urlUtils.ts      # URL処理ユーティリティ
+│   ├── databaseConnection.ts # データベース接続管理
+│   ├── domain/          # ドメインモデル
+│   │   ├── fileTreeEntry.test.ts # ファイルツリーエントリのテスト
+│   │   ├── fileTreeEntry.ts      # ファイルツリーエントリのモデル
+│   │   ├── language.ts           # 言語関連のモデル
+│   │   ├── translationEntry.ts   # 翻訳エントリのモデル
+│   │   ├── types.ts              # 型定義
+│   │   └── vectorEntry.ts        # ベクトルエントリのモデル
+│   ├── fileProcessor.ts # ローカルファイルの処理
+│   ├── fileReader.ts    # ファイル読み込みユーティリティ
+│   ├── fileWriter.test.ts # ファイル書き込みのテスト
+│   ├── fileWriter.ts    # ファイル書き込みユーティリティ
+│   ├── genAIClient.ts   # GenAI APIクライアント
+│   ├── logger.ts        # ロギングユーティリティ
+│   ├── parser/          # パーサー関連
+│   │   ├── markdownFormatter.test.ts # Markdownフォーマッタのテスト
+│   │   ├── markdownFormatter.ts      # Markdownフォーマッタ
+│   │   ├── parser.ts                 # メインパーサー
+│   │   └── turndown-plugin-gfm.d.ts  # Markdownプラグインの型定義
+│   ├── path.ts          # パス処理ユーティリティ
+│   ├── prompts.ts       # AIプロンプト管理
+│   ├── qdrant/          # Qdrant関連
+│   ├── repository/      # リポジトリ層
+│   │   ├── fileTreeRepository.test.ts # ファイルツリーハンドラのテスト
+│   │   ├── fileTreeRepository.ts      # ファイルツリーハンドラ
+│   │   └── translationRepository.ts   # 翻訳ハンドラ
+│   ├── resources/       # リソースファイル
+│   │   └── tests/       # テスト用リソース
+│   │       └── test.md  # テスト用Markdownファイル
+│   ├── sorter.test.ts   # ソーターのテスト
+│   ├── sorter.ts        # ソート処理
+│   ├── summarizer.test.ts # 要約のテスト
+│   ├── summarizer.ts    # 要約処理
+│   ├── translator.test.ts # 翻訳のテスト
+│   ├── translator.ts    # 翻訳処理
+│   ├── types/           # 型定義
+│   └── utils/           # ユーティリティ関数
+│       ├── apiRetry.ts  # APIリトライ処理
+│       ├── generateStructuredContent.ts # 構造化コンテンツ生成
+│       └── rateLimiter.ts # APIレート制限
 ├── package.json         # 依存関係
 ├── tsconfig.json        # TypeScript 設定
 ├── .env                 # 環境変数

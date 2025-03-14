@@ -1,9 +1,9 @@
 import { URL } from 'url';
 import * as cheerio from 'cheerio';
-import { SitemapEntry } from '../types';
+import { SitemapEntry } from '../domain/types';
 import { isLinkAllowed, normalizeUrl } from './urlUtils';
 
-function processLink(href: string, url: string, depth: number, currentDepth: number, allowedDomains: string[]): SitemapEntry | null {
+function validateLink(href: string, url: string, depth: number, currentDepth: number, allowedDomains: string[]): SitemapEntry | null {
   try {
     const absoluteUrl = new URL(href, url).toString();
     const parsedUrl = new URL(absoluteUrl);
@@ -22,4 +22,4 @@ function processLink(href: string, url: string, depth: number, currentDepth: num
   }
 }
 
-export { processLink };
+export { validateLink };
