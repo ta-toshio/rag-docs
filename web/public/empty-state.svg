@@ -1,0 +1,13 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path 
+    d="M64 100C85.5 100 100 85.5 100 64C100 42.5 85.5 28 64 28C42.5 28 28 42.5 28 64C28 85.5 42.5 100 64 100Z" 
+    fill="#FFCC33" 
+  />
+  <path 
+    d="M50 40L55 35M55 35L60 30M55 35V80M55 80H75M55 80H35" 
+    stroke="#333333" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+  />
+</svg>
+
