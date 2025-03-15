@@ -15,6 +15,7 @@ describe('FileTreeHandler', () => {
   it('should register and retrieve a file entry', () => {
     const entry: FileTreeEntry = {
       id: 'file1',
+      project_id: 'proj1',
       resource_id: 'res1',
       domain: 'example.com',
       name: 'test.txt',
@@ -39,6 +40,7 @@ describe('FileTreeHandler', () => {
   it('should insert new entry on upsert when not exists', () => {
     const entry: FileTreeEntry = {
       id: 'file2',
+      project_id: 'proj2',
       resource_id: 'res2',
       domain: 'example.com',
       name: 'test2.txt',
@@ -57,6 +59,7 @@ describe('FileTreeHandler', () => {
   it('should update existing entry on upsert when exists', () => {
     const initialEntry: FileTreeEntry = {
       id: 'file3',
+      project_id: 'proj3',
       resource_id: 'res3',
       domain: 'example.com',
       name: 'test3.txt',

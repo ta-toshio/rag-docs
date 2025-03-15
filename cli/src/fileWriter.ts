@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from './logger';
-import { getFilePath } from './path';
 
 async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
   try {
+    // @TODO リファクタリング
     const parsedUrl = new URL(url);
     const domain = parsedUrl.hostname;
     const outputPath = path.join('output', domain);

@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import { Command, Option } from 'commander';
 import { logger } from './logger';
+import { ProjectRepository } from './repository/projectRepository';
 import { initializeDatabase } from './databaseConnection';
 import { FileTreeRepository } from './repository/fileTreeRepository';
 import { TranslationRepository } from './repository/translationRepository';
@@ -26,11 +27,14 @@ import { factoryVectorEntry } from './domain/vectorEntry';
 import { splitMarkdownToParagraphs } from './utils/paragraphSplit';
 import { QDRANT_COLLECTION_NAME, QDRANT_URL } from './config';
 import { getEmbedding } from './utils/vectorize';
+import { factoryProjectEntry } from './domain/projectEntry';
+import { normalizeUrl } from './crawler/urlUtils';
 
 // Initialize database and handlers
 const db = initializeDatabase();
 const fileTreeHandler = new FileTreeRepository(db);
 const translationHandler = new TranslationRepository(db);
+const projectRepository = new ProjectRepository(db);
 
 // Initialize Qdrant client and handler
 const qdrantClient = new QdrantClient({
@@ -48,23 +52,24 @@ program
 program.command('url')
   .description('Webコンテンツを処理する')
   .argument('<url>', '解析対象のURL')
-  .addOption(new Option('--depth <number>', '探索の深さ').default('3'))
+  .addOption(new Option('--depth <number>', '探索の深さ').default('2'))
   .addOption(new Option('--language <lang>', '翻訳言語').default('ja'))
   .addOption(new Option('--summary-only', '要約のみ実行'))
   .addOption(new Option('--translate-only', '翻訳のみ実行'))
   .addOption(new Option('--allow-domains <domains>', '許可ドメインの指定'))
   .addOption(new Option('--force-fetch', 'キャッシュを無視して再取得'))
-  .action(async (url, options) => {
+  .action(async (dirtyUrl: string, options: any) => {
     try {
+
       if (!isValidLanguageCode(options.language)) {
         throw new Error(`Invalid language code: ${options.language}`);
       }
       const languageName = getLanguageName(options.language);
 
       const allowedDomains = options.allowDomains ? options.allowDomains.split(',') : [];
-      const normalizedBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+      const url = normalizeUrl(dirtyUrl);
       const sitemap: SitemapEntry[] = await crawlPage(
-        normalizedBaseUrl,
+        url,
         parseInt(options.depth),
         allowedDomains,
         1,
@@ -76,6 +81,18 @@ program.command('url')
 
       await saveSitemapToFile(sortedSitemap, url);
       // logger.info(JSON.stringify(sortedSitemap, null, 2));
+
+      let project = await projectRepository.getProjectByValue(url);
+
+      if (!project) {
+        project = projectRepository.createProject(factoryProjectEntry(url));
+        logger.info(`Created new project with value: ${url}`);
+      }
+
+      if (!project) {
+        logger.error(`Failed to create project with value: ${url}`);
+        throw new Error(`Failed to create project with value: ${url}`);
+      }
 
       const promises = [];
       for (const [index, entry] of sortedSitemap.entries()) {
@@ -158,7 +175,7 @@ program.command('url')
           logger.info(`Saved translation and summarization files for ${entry.url}`);
 
           // save fileTree entry
-          const fileTreeEntry = factoryFileTreeEntry(entry.url, entry.title, index);
+          const fileTreeEntry = factoryFileTreeEntry(entry.url, entry.title, index, project.id);
           fileTreeHandler.upsertFileTreeEntry(fileTreeEntry);
 
           // save tranlation entry

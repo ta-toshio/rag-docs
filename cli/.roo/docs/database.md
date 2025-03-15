@@ -6,26 +6,71 @@
 本システムでは、**SQLite と Qdrant を組み合わせてデータ管理・検索を行う**。  
 それぞれの役割は以下の通り：
 
-1. **ファイルツリー情報 (`file_tree_collection`, SQLite)**
-    - Webサイトやローカルファイルの **フォルダ・ファイル構造を管理**
-    - **Next.js の UI でツリー表示** に利用
-2. **翻訳データ (`translation_collection`, SQLite)**
-    - **Google Gemini API で翻訳・要約したデータを管理**
-    - **ファイル単位で翻訳情報を保存**
-3. **ベクトルデータ (`vector_collection`, Qdrant)**
-    - **翻訳済みテキストを段落ごとに分割し、ベクトル検索を可能にする**
-    - **類似コンテンツ検索を Qdrant で実施**
+1. **プロジェクト情報 (`projects`, SQLite)**
+   - **対象となる Web サイトやローカルプロジェクトを識別するための情報を管理**
+   - **`file_trees` や `translations` のデータをプロジェクト単位で整理**
+   - **ドメインや指定した値を `value` に設定し、一意に識別**
+2. **ファイルツリー情報 (`file_trees`, SQLite)**
+   - **Webサイトやローカルファイルのフォルダ・ファイル構造を管理**
+   - **Next.js の UI でツリー表示** に利用
+3. **翻訳データ (`translations`, SQLite)**
+   - **Google Gemini API で翻訳・要約したデータを管理**
+   - **ファイル単位で翻訳情報を保存**
+4. **ベクトルデータ (`vectors`, Qdrant)**
+   - **翻訳済みテキストを段落ごとに分割し、ベクトル検索を可能にする**
+   - **類似コンテンツ検索を Qdrant で実施**
+
 
 ---
 
 ## **2. データ構造**
 
-### **📌 2.1 `file_tree_collection`（SQLite: ファイルツリー情報）**
+### **📌 2.1 `projects`（SQLite: プロジェクト情報）**
+
+**目的**:
+
+- 各プロジェクト（対象となるドメインや識別可能な値）を管理する
+- **`file_trees` や `translations` のデータをプロジェクト単位で整理する**
+- **ドメインまたは指定した値を `value` に設定し、一意に識別する**
+
+**検索用途**:
+
+- **登録されたプロジェクトの一覧を取得**
+- **ファイルツリーや翻訳データの検索時にプロジェクト単位でフィルタリング**
+
+```sql
+CREATE TABLE projects (
+  id TEXT PRIMARY KEY,  -- ✅ ユニークな識別子
+  value TEXT NOT NULL UNIQUE, -- ✅ ドメインまたは指定した値、一意に識別
+  timestamp TEXT NOT NULL -- 登録日時 (ISO8601)
+);
+```
+
+#### **📌 ProjectEntry (TypeScript 型定義)**
+
+```typescript
+export interface ProjectEntry {
+  id: string;
+  value: string;
+  timestamp: string;
+}
+```
+##### **データ例**
+```json
+[
+  {
+    "id": "proj-001",
+    "value": "sample.com",
+    "timestamp": "2025-03-12T12:00:00Z"
+  }
+]
+```
+
+### **📌 2.2 `file_trees`（SQLite: ファイルツリー情報）**
 
 **目的**:
 
 - Webサイトやローカルファイルのフォルダ・ファイル構造を管理する
-- **フォルダ階層をツリー構造として保持し、子要素を `children` として格納**
 - **SQLite で管理し、高速なフィルタ検索を実現**
 
 **検索用途**:
@@ -34,8 +79,9 @@
 - **Next.js の UI でファイルツリーを表示**
 
 ```sql
-CREATE TABLE file_tree_collection (
+CREATE TABLE file_trees (
   id TEXT PRIMARY KEY,  -- ✅ ユニークな識別子 
+  project_id TEXT NOT NULL, -- ✅ projects の外部キー
   resource_id TEXT NOT NULL, -- ✅ ユニークな識別子 リソースの場所
   domain TEXT NOT NULL, -- ドメイン名 ("sample.com" など)
   name TEXT NOT NULL,   -- フォルダ・ファイル名
@@ -49,13 +95,14 @@ CREATE TABLE file_tree_collection (
 
 ---
 
-### **📌 FileTreeEntry (TypeScript 型定義)**
+#### **📌 FileTreeEntry (TypeScript 型定義)**
 
-Based on the `file_tree_collection` schema:
+Based on the `file_trees` schema:
 
 ```typescript
 export interface FileTreeEntry {
   id: string;
+  project_id: string;
   resource_id: string;
   domain: string;
   name: string;
@@ -66,12 +113,13 @@ export interface FileTreeEntry {
   sort_order: number;
 }
 ```
-#### **データ例**
+##### **データ例**
 
 ```json
 [
   {
     "id": "UUID7の文字列",
+    "project_id": "projects.id",
     "resource_id": "https://sample.com/docs/setup",
     "domain": "sample.com",
     "name": "setup",
@@ -83,16 +131,15 @@ export interface FileTreeEntry {
   }
 ]
 ```
-```
 
 ---
 
-### **📌 2.2 `translation_collection`（SQLite: 翻訳データ）**
+### **📌 2.3 `translations`（SQLite: 翻訳データ）**
 
 **目的**:
 
 - 翻訳・要約データを SQLite に保存する
-- **ファイルツリー (`file_tree_collection`) と `id` で紐づけることで、検索の一貫性を保つ**
+- **ファイルツリー (`file_trees`) と `id` で紐づけることで、検索の一貫性を保つ**
 - **高速なファイル単位の検索・取得を実現**
 
 **検索用途**:
@@ -101,7 +148,7 @@ export interface FileTreeEntry {
 - **検索時に `keywords` を活用して関連データを検索**
 
 ```sql
-CREATE TABLE translation_collection (
+CREATE TABLE translations (
   id TEXT PRIMARY KEY,  -- ✅ ユニークな識別子 
   resource_id TEXT NOT NULL, -- ✅ ユニークな識別子 リソースの場所
   title TEXT NOT NULL,  -- ✅ ドキュメントのタイトル
@@ -117,9 +164,9 @@ CREATE TABLE translation_collection (
 
 ---
 
-### **📌 TranslationEntry (TypeScript 型定義)**
+#### **📌 TranslationEntry (TypeScript 型定義)**
 
-Based on the `translation_collection` schema:
+Based on the `translations` schema:
 
 ```typescript
 export interface TranslationEntry {
@@ -136,7 +183,7 @@ export interface TranslationEntry {
 }
 ```
 
-#### **データ例**
+##### **データ例**
 
 ```json
 [
@@ -157,13 +204,13 @@ export interface TranslationEntry {
 
 ---
 
-### **📌 2.3 `vector_collection`（Qdrant: ベクトルデータ）**
+### **📌 2.4 `vectors`（Qdrant: ベクトルデータ）**
 
 **目的**:
 
 - 段落毎にデータを保存し、Qdrant の **ベクトル検索** で関連データを取得する
 - **Markdown の改行 (`\n\n`) で区切り、1 段落 200〜500 文字に分割**
-- **SQLite の `translation_collection` と `resource_id` で関連付ける**
+- **SQLite の `translations` と `resource_id` で関連付ける**
 
 **検索用途**:
 
@@ -172,7 +219,7 @@ export interface TranslationEntry {
 ```typescript
 export interface VectorEntry {
   id: string;          // ✅ ユニークな識別子 (ドキュメントの識別子 + 段落番号)
-  resource_id: string;     // ✅ translation_collection の resource_id に対応
+  resource_id: string;     // ✅ translations の resource_id に対応
   paragraph_index: number;
   vector: number[];    // ✅ 埋め込みベクトル (Google Gemini API, 768次元)
   original_text: string; // ✅ 元のテキスト
@@ -187,22 +234,22 @@ export interface VectorEntry {
 
 ### **📌 3.1 データ登録**
 
-4. **`file_tree_collection` にファイルツリー情報を SQLite に登録**
-5. **`translation_collection` に翻訳データを SQLite に登録**
-6. **`vector_collection` に段落ごとのベクトルデータを Qdrant に登録**
+4. **`file_trees` にファイルツリー情報を SQLite に登録**
+5. **`translations` に翻訳データを SQLite に登録**
+6. **`vectors` に段落ごとのベクトルデータを Qdrant に登録**
 
 ### **📌 3.2 データ検索**
 
 #### **1️⃣ ファイルツリーを取得 (SQLite)**
 
 ```sql
-SELECT * FROM file_tree_collection WHERE domain = "sample.com";
+SELECT * FROM file_trees WHERE domain = "sample.com";
 ```
 
 #### **2️⃣ 翻訳データを取得 (SQLite)**
 
 ```sql
-SELECT * FROM translation_collection WHERE resource_id = "https://sample.com/docs/setup";
+SELECT * FROM translations WHERE resource_id = "https://sample.com/docs/setup";
 ```
 
 #### **3️⃣ ベクトル検索 (Qdrant)**
@@ -217,28 +264,27 @@ const vectorQuery = {
     ]
   }
 };
-const similarDocs = await qdrantClient.search("vector_collection", vectorQuery);
+const similarDocs = await qdrantClient.search("vectors", vectorQuery);
 ```
 
 ---
 
 ## **3. データのマッピング**  
 
-- **`file_tree_collection.resource_id`** と **`translation_collection.resource_id`** を統一し、マッピングキーとする  
+- **`file_trees.resource_id`** と **`translations.resource_id`** を統一し、マッピングキーとする  
 - **ファイルツリー取得後に `resource_id` をキーに翻訳データを取得**  
 - **各ファイルと翻訳データが1対1で対応するようにする**  
 
 #### **マッピングの流れ**  
-1. **ファイルツリー (`file_tree_collection`) から `resource_id` を取得**  
-2. **同じ `resource_id` を持つ翻訳データ (`translation_collection`) を取得**  
+1. **ファイルツリー (`file_trees`) から `resource_id` を取得**  
+2. **同じ `resource_id` を持つ翻訳データ (`translations`) を取得**  
 3. **Next.js でツリーを表示し、選択したファイルの翻訳データを取得**  
 
 
 ## **4. Qdrant の運用方針**
 
 ### **📌 4.1 データ登録のルール**
-- **`file_tree_collection` は `sitemap.json` から作成し、親子関係を `children` に保存**。
-- **`translation_collection` は `file_tree_collection.id` を `id` に統一し、マッピング**。
+- **`translations` は `file_trees.id` を `id` に統一し、マッピング**。
 
 
 ### **📌 4.2 データ取得・更新**
@@ -265,7 +311,8 @@ const similarDocs = await qdrantClient.search("vector_collection", vectorQuery);
 
 ## **6. まとめ**
 
-✅ **ファイルツリー (`file_tree_collection`) と 翻訳データ (`translation_collection`) は SQLite で管理**  
-✅ **検索高速化のため、`translation_collection` の `keywords` に JSON 形式のインデックスを活用**  
-✅ **ベクトル検索 (`vector_collection`) は Qdrant を使用し、類似検索を最適化**  
-✅ **検索時の流れは `SQLite → Qdrant` の順で処理し、効率化**
+✅ **プロジェクト情報 (`projects`) を追加し、データをプロジェクト単位で整理**  
+✅ **ファイルツリー (`file_trees`) と 翻訳データ (`translations`) は SQLite で管理**  
+✅ **検索高速化のため、`translations` の `keywords` に JSON 形式のインデックスを活用**  
+✅ **ベクトル検索 (`vectors`) は Qdrant を使用し、類似検索を最適化**  
+✅ **検索時の流れは `SQLite → Qdrant` の順で処理し、効率化**  

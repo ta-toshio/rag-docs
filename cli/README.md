@@ -14,7 +14,7 @@ Web上に公開されている公式ドキュメントを翻訳・要約し、�
     ```
 4.  CLIツールを実行します。
     ```
-    translate-docs <command> [options]
+    npm run start -- url https://some_domain --depth 2 --allow-domains https://some_allowed_domain
     ```
 
 ## コマンド

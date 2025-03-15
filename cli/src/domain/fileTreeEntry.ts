@@ -11,12 +11,14 @@ export interface FileTreeEntry {
   parent: string | null;
   timestamp: string;
   sort_order: number;
+  project_id: string;
 }
 
 export const factoryFileTreeEntry = (
   urlString: string,
   name: string,
-  sort_order: number
+  sort_order: number,
+  project_id: string
 ): FileTreeEntry => {
   const parsedUrl = new URL(urlString);
   const pathname = parsedUrl.pathname;
@@ -31,6 +33,7 @@ export const factoryFileTreeEntry = (
     path: pathname,
     parent: parentPath,
     timestamp: new Date().toISOString(),
-    sort_order: sort_order
+    sort_order: sort_order,
+    project_id: project_id
   };
 }
