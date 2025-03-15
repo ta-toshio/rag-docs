@@ -1,0 +1,7 @@
+# Decision Log
+
+This file records architectural and implementation decisions.
+
+| Date and Time (YYYY-MM-DD HH:MM:SS) | Decision | Rationale | Implementation Details |
+|-----------------------------------|----------|-----------|------------------------|
+| 2025-03-15 22:01:00 | Memory Bank 初期化 | プロジェクトのコンテキストを保持するため | activeContext.md, productContext.md, progress.md を作成 |
