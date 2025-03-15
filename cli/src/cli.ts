@@ -6,6 +6,7 @@ import { initializeDatabase } from './databaseConnection';
 import { FileTreeRepository } from './repository/fileTreeRepository';
 import { TranslationRepository } from './repository/translationRepository';
 import { parseHtmlToDOM } from './parser/parser';
+import { VectorHandler } from './qdrant/vectorHandler';
 import { htmlToMarkdown } from './parser/markdownFormatter';
 import { rateLimitedRequest } from './utils/rateLimiter';
 import apiRetry from './utils/apiRetry';
@@ -15,19 +16,27 @@ import { crawlPage } from './crawler/crawler';
 import { SitemapEntry } from './domain/types';
 import { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile } from './fileWriter';
 import { sortByDirectory } from './sorter';
-import { readHtmlFiles } from './parser/parser';
 import { getLanguageName, isValidLanguageCode } from './domain/language';
-import { getFilePath, getHtmlFilePath, getMarkdownFilePath, getSummarizationFilePath, getTranslationFilePath } from './path';
+import { getHtmlFilePath, getMarkdownFilePath, getSummarizationFilePath, getTranslationFilePath } from './path';
 import { readFile } from './fileReader';
-import path from 'path';
 import { factoryFileTreeEntry } from './domain/fileTreeEntry';
 import { factoryTranslationEntry, TranslationEntry } from './domain/translationEntry';
-import { v7 as uuidv7 } from 'uuid';
+import { QdrantClient } from '@qdrant/js-client-rest';
+import { factoryVectorEntry } from './domain/vectorEntry';
+import { splitMarkdownToParagraphs } from './utils/paragraphSplit';
+import { QDRANT_COLLECTION_NAME, QDRANT_URL } from './config';
+import { getEmbedding } from './utils/vectorize';
 
 // Initialize database and handlers
 const db = initializeDatabase();
 const fileTreeHandler = new FileTreeRepository(db);
 const translationHandler = new TranslationRepository(db);
+
+// Initialize Qdrant client and handler
+const qdrantClient = new QdrantClient({
+  url: QDRANT_URL,
+});
+const vectorHandler = new VectorHandler(qdrantClient, QDRANT_COLLECTION_NAME);
 
 const program = new Command();
 
@@ -146,6 +155,7 @@ program.command('url')
             saveTranslationToFile(translatation.translatedText, translationFilePath),
             saveSummarizationToFile(summarization.summary, summarizationFilePath)
           ]);
+          logger.info(`Saved translation and summarization files for ${entry.url}`);
 
           // save fileTree entry
           const fileTreeEntry = factoryFileTreeEntry(entry.url, entry.title, index);
@@ -161,6 +171,29 @@ program.command('url')
           )
           translationHandler.upsertTranslationEntry(translationEntry);
 
+          // save vector data
+          try {
+            // Markdown を段落ごとに分割（各段落200〜500文字）
+            const paragraphs = splitMarkdownToParagraphs(markdown); // 本当はtranslatation.translatedText
+            const vectorEntries = await Promise.all(
+              paragraphs.map(async (para, paraIndex) => {
+                const vector = await getEmbedding(para);
+                return factoryVectorEntry(entry.url, paraIndex, vector, para, languageName);
+              })
+            );
+            // const vectorEntries = paragraphs.map((para, paraIndex) => {
+            //   // 実際の実装では、Google Gemini API 等で埋め込みベクトルを取得する
+            //   // ここではデモ用に768次元のダミーベクトル（全要素0）を使用
+            //   const dummyVector = new Array(768).fill(0);
+            //   return factoryVectorEntry(entry.url, paraIndex, dummyVector, para, languageName);
+            // });
+            // バッチ処理で Qdrant に登録
+            await vectorHandler.deleteVectorsByResourceIds([entry.url]);
+            await vectorHandler.upsertVectors(vectorEntries);
+          } catch (e) {
+            logger.error(`Failed to upsert vector entries: ${e}`);
+          }
+
           return resolve(true);
 
         });
@@ -169,83 +202,6 @@ program.command('url')
       };
 
       await Promise.all(promises);
-
-      /*
-      const htmlContents = await readHtmlFiles(url);
-      // logger.log(`HTML Contents: ${htmlContents.length} files`);
-
-      if (htmlContents.length <= 0) {
-        logger.info('No HTML contents to process. url: ' + url);
-        return;
-      }
-
-      for (const item of htmlContents) {
-        let dom;
-        try {
-          dom = parseHtmlToDOM(item.htmlContent);
-        } catch (error) {
-          logger.error(`Failed to parse HTML for ${item.url}: ${error}`);
-          continue;
-        }
-
-        const markdown = htmlToMarkdown(dom);
-        // logger.info(`Markdown: ${markdown.substring(0, 100)}...`);
-        // logger.info(`item.path: ${item.path}`);
-        await saveMarkdownToFile(markdown, item.url);
-        // logger.log(`DOM: Parsed successfully`);
-
-        let summarization, translatation;
-
-        if (options.summaryOnly) {
-          try {
-            summarization = await apiRetry(
-              () => rateLimitedRequest(() => summarize(markdown, languageName))
-            );
-            // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
-          } catch (error) {
-            logger.error(`Summarization error: ${error}`);
-          }
-        }
-
-        if (options.translateOnly) {
-          try {
-            translatation = await apiRetry(
-              () => rateLimitedRequest(() => translate(markdown, languageName))
-            );
-            // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
-          } catch (error) {
-            logger.error(`Translation error: ${error}`);
-          }
-        }
-
-        if (!options.summaryOnly && !options.translateOnly) {
-          try {
-            summarization = await apiRetry(
-              () => rateLimitedRequest(() => summarize(markdown, languageName))
-            );
-            // logger.log(`Summarized: ${summarizedText.summary.substring(0, 100)}...`);
-          } catch (error) {
-            logger.error(`Summarization error: ${error}`);
-          }
-          try {
-            translatation = await apiRetry(
-              () => rateLimitedRequest(() => translate(markdown, languageName))
-            );
-            // logger.log(`Translated: ${translatation.translatedText.substring(0, 100)}...`);
-          } catch (error) {
-            logger.error(`Translation error: ${error}`);
-          }
-        }
-        if (translatation?.translatedText) {
-          await saveTranslationToFile(translatation.translatedText, item.url);
-        }
-
-        if (summarization?.summary) {
-          await saveSummarizationToFile(summarization.summary, item.url);
-        }
-      }
-      */
-
 
     } catch (error) {
       logger.error(`Failed to process URL: ${error instanceof Error ? error.message : String(error)}`);

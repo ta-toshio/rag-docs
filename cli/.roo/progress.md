@@ -66,9 +66,9 @@
 | 4  |                          | **`translation_collection` のスキーマ設計** | TypeScript の型定義 | `src/domain/translationEntry.ts` | `.roo/docs/database.md` | ✅ |
 | 5  |                          | **`vector_collection` のスキーマ設計** | TypeScript の型定義 | `src/domain/vectorEntry.ts` | `.roo/docs/database.md` | ✅ |
 | 6  | **データ登録機能**        | **ファイルツリーのデータ登録を実装 (SQLite)** | sitemap.json から `file_tree_collection` に登録 | `src/repository/fileTreeRepository.ts` | `.roo/docs/database.md` | ✅ |
-| 7  |                          | **翻訳データの登録機能を実装 (SQLite)** | 翻訳・要約データを `translation_collection` に登録 | `src/repository/translationRepository.ts` | `.roo/docs/database.md` | ⏳ |
-| 8  |                          | **ベクトルデータの登録機能を実装 (Qdrant)** | 段落単位で `vector_collection` にベクトルデータを登録 | `src/qdrant/vectorHandler.ts` | `.roo/docs/database.md` | ⏳ |
-| 9  |                          | **Qdrant のデータ登録テストを実装** | `vector_collection` の登録テスト | `tests/qdrant/vector.test.ts` | `.roo/docs/database.md` | ⏳ |
+| 7  |                          | **翻訳データの登録機能を実装 (SQLite)** | 翻訳・要約データを `translation_collection` に登録 | `src/repository/translationRepository.ts` | `.roo/docs/database.md` | ✅ |
+| 8  |                          | **ベクトルデータの登録機能を実装 (Qdrant)** | 段落単位で `vector_collection` にベクトルデータを登録 | `src/qdrant/vectorHandler.ts` | `.roo/docs/database.md` | ✅ |
+| 9  |                          | **Qdrant のデータ登録テストを実装** | `vector_collection` の登録テスト | `tests/qdrant/vectorHandler.test.ts` | `.roo/docs/database.md` | ✅ |
 | 10 | **ファイルツリー検索**    | **ドメイン指定でファイルツリーを検索 (SQLite)** | `domain` をキーに `file_tree_collection` を取得 | `src/repository/fileTreeRepository.ts` | `.roo/docs/database.md` | ⏳ |
 | 11 | **翻訳データ検索**      | **リソース ID 指定で翻訳データを取得 (SQLite)** | `resource_id` をキーに `translation_collection` から取得 | `src/repository/translationRepository.ts` | `.roo/docs/database.md` | ⏳ |
 | 12 | **ベクトル検索**        | **類似データ検索 (Qdrant)** | `vector` を用いた類似検索を実装 | `src/qdrant/vectorSearch.ts` | `.roo/docs/database.md` | ⏳ |
