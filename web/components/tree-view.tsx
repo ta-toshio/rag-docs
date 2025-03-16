@@ -1,125 +1,56 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronRight, File, Folder, FolderOpen, FileText } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { FileType } from "@/types/file"
-
-// Sample file structure
-const files: FileType[] = [
-  {
-    id: "folder-1",
-    name: "Documentation",
-    type: "folder",
-    path: "/documentation",
-    children: [
-      {
-        id: "file-1",
-        name: "getting-started.md",
-        type: "file",
-        path: "/documentation/getting-started.md",
-      },
-      {
-        id: "file-2",
-        name: "api-reference.md",
-        type: "file",
-        path: "/documentation/api-reference.md",
-      },
-      {
-        id: "folder-2",
-        name: "Guides",
-        type: "folder",
-        path: "/documentation/guides",
-        children: [
-          {
-            id: "file-3",
-            name: "installation.md",
-            type: "file",
-            path: "/documentation/guides/installation.md",
-          },
-          {
-            id: "file-4",
-            name: "configuration.md",
-            type: "file",
-            path: "/documentation/guides/configuration.md",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "folder-3",
-    name: "Examples",
-    type: "folder",
-    path: "/examples",
-    children: [
-      {
-        id: "file-5",
-        name: "basic-usage.md",
-        type: "file",
-        path: "/examples/basic-usage.md",
-      },
-      {
-        id: "file-6",
-        name: "advanced-features.md",
-        type: "file",
-        path: "/examples/advanced-features.md",
-      },
-    ],
-  },
-  {
-    id: "file-7",
-    name: "README.md",
-    type: "file",
-    path: "/README.md",
-  },
-  {
-    id: "file-8",
-    name: "CONTRIBUTING.md",
-    type: "file",
-    path: "/CONTRIBUTING.md",
-  },
-]
+import * as React from "react";
+import { ChevronRight, File, Folder, FolderOpen, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import useLocalStorage from "@/hooks/use-local-storage";
+import { TreeNode } from "@/domain/tree-node";
 
 interface TreeViewProps {
-  onFileSelect?: (file: FileType) => void
-  activeFileId?: string | null
+  fileList: TreeNode[];
+  onFileSelect?: (file: TreeNode) => void;
+  activeFileId?: string | null;
 }
 
-export function TreeView({ onFileSelect, activeFileId }: TreeViewProps) {
+export function TreeView({ fileList, onFileSelect, activeFileId }: TreeViewProps) {
   // State for expanded folders
-  const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(
-    new Set(["folder-1", "folder-3"]), // Expand some folders by default
-  )
+  const [expandedFolders, setExpandedFolders] = useLocalStorage<string[]>(
+    "expandedFolders",
+    []
+  );
 
   const toggleFolder = (folderId: string) => {
-    const newExpanded = new Set(expandedFolders)
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId)
+    const newExpanded = [...expandedFolders];
+    if (newExpanded.includes(folderId)) {
+      newExpanded.splice(newExpanded.indexOf(folderId), 1);
     } else {
-      newExpanded.add(folderId)
+      newExpanded.push(folderId);
     }
-    setExpandedFolders(newExpanded)
-  }
+    setExpandedFolders(newExpanded);
+  };
+
+  const isExpanded = (folderId: string) => {
+    return expandedFolders.includes(folderId);
+  };
 
   interface TreeViewItemProps {
-    item: FileType
-    level?: number
+    item: TreeNode;
+    level?: number;
   }
 
   function TreeViewItem({ item, level = 0 }: TreeViewItemProps) {
-    const hasChildren = item.children && item.children.length > 0
-    const isExpanded = expandedFolders.has(item.id)
-    const isMarkdown = item.name.endsWith(".md")
-    const isActive = activeFileId === item.id
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedFolders.includes(item.id);
+    const isMarkdown = item.name.endsWith(".md");
+    const isActive = activeFileId === item.id;
 
     const handleClick = () => {
       if (hasChildren) {
-        toggleFolder(item.id)
+        toggleFolder(item.id);
       } else if (onFileSelect) {
-        onFileSelect(item)
+        onFileSelect(item);
       }
-    }
+    };
 
     return (
       <div>
@@ -128,7 +59,7 @@ export function TreeView({ onFileSelect, activeFileId }: TreeViewProps) {
           className={cn(
             "flex w-full items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent",
             "focus:bg-accent focus:outline-none",
-            isActive && "bg-accent text-accent-foreground font-medium",
+            isActive && "bg-accent text-accent-foreground font-medium"
           )}
           style={{ paddingLeft: `${(level + 1) * 12}px` }}
         >
@@ -150,7 +81,7 @@ export function TreeView({ onFileSelect, activeFileId }: TreeViewProps) {
           )}
           <span className="truncate">{item.name}</span>
         </button>
-        {hasChildren && isExpanded && (
+        {hasChildren && isExpanded && item.children && (
           <div>
             {item.children.map((child) => (
               <TreeViewItem key={child.id} item={child} level={level + 1} />
@@ -158,16 +89,15 @@ export function TreeView({ onFileSelect, activeFileId }: TreeViewProps) {
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
     <div className="p-2">
       <div className="mb-2 px-2 py-1 text-sm font-medium text-muted-foreground">Files</div>
-      {files.map((file) => (
+      {fileList.map((file) => (
         <TreeViewItem key={file.id} item={file} />
       ))}
     </div>
-  )
+  );
 }
-
