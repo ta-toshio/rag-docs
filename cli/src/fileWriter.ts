@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from './logger';
 
-async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
+function saveSitemapToFile(sitemap: any[], url: string): void {
   try {
     // @TODO リファクタリング
     const parsedUrl = new URL(url);
@@ -21,7 +21,7 @@ async function saveSitemapToFile(sitemap: any[], url: string): Promise<void> {
   }
 }
 
-async function writeFile(data: string, filePath: string): Promise<void> {
+function writeFile(data: string, filePath: string): void {
   try {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, data, 'utf-8');
@@ -32,16 +32,16 @@ async function writeFile(data: string, filePath: string): Promise<void> {
   }
 }
 
-async function saveMarkdownToFile(markdown: string, filePath: string): Promise<void> {
-  await writeFile(markdown, filePath);
+function saveMarkdownToFile(markdown: string, filePath: string): void {
+  writeFile(markdown, filePath);
 }
 
-async function saveTranslationToFile(translatedText: string, filePath: string): Promise<void> {
-  await writeFile(translatedText, filePath);
+function saveTranslationToFile(translatedText: string, filePath: string): void {
+  writeFile(translatedText, filePath);
 }
 
-async function saveSummarizationToFile(summary: string, filePath: string): Promise<void> {
-  await writeFile(summary, filePath);
+function saveSummarizationToFile(summary: string, filePath: string): void {
+  writeFile(summary, filePath);
 }
 
 export { saveSitemapToFile, saveMarkdownToFile, saveTranslationToFile, saveSummarizationToFile };

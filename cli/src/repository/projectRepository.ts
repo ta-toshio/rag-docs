@@ -21,7 +21,7 @@ export class ProjectRepository {
     `);
   }
 
-  public createProject(project: ProjectEntry): ProjectEntry {
+  public createProject(project: ProjectEntry): void {
     const stmt = this.db.prepare(`
       INSERT INTO projects (
         id,
@@ -36,7 +36,6 @@ export class ProjectRepository {
 
     stmt.run(project);
     logger.info(`Inserted new project with value: ${project.value}`);
-    return project;
   }
 
   public getProjectByValue(value: string): ProjectEntry | null {

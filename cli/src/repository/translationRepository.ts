@@ -30,50 +30,58 @@ export class TranslationRepository {
   public upsertTranslationEntry(entry: TranslationEntry): void {
     const existingEntry = this.getTranslationEntryByResourceId(entry.resource_id);
 
-    if (existingEntry) {
-      const stmt = this.db.prepare(`
-        UPDATE translations SET
-          resource_id = @resource_id,
-          title = @title,
-          summary = @summary,
-          description = @description,
-          text = @text,
-          original_text = @original_text,
-          language = @language,
-          keywords = @keywords,
-          timestamp = @timestamp
-        WHERE resource_id = @resource_id
-      `);
-      stmt.run(entry);
-      logger.info(`Updated translation entry with resource_id: ${entry.resource_id}`);
-    } else {
-      const stmt = this.db.prepare(`
-        INSERT INTO translations (
-          id,
-          resource_id,
-          title,
-          summary,
-          description,
-          text,
-          original_text,
-          language,
-          keywords,
-          timestamp
-        ) VALUES (
-          @id,
-          @resource_id,
-          @title,
-          @summary,
-          @description,
-          @text,
-          @original_text,
-          @language,
-          @keywords,
-          @timestamp
-        )
-      `);
-      stmt.run(entry);
-      logger.info(`Inserted new translation entry with resource_id: ${entry.resource_id}`);
+    try {
+      if (existingEntry) {
+        const stmt = this.db.prepare(`
+          UPDATE translations SET
+            resource_id = @resource_id,
+            title = @title,
+            summary = @summary,
+            description = @description,
+            text = @text,
+            original_text = @original_text,
+            language = @language,
+            keywords = @keywords,
+            timestamp = @timestamp
+          WHERE resource_id = @resource_id
+        `);
+        stmt.run(entry);
+        logger.info(`Updated translation entry with resource_id: ${entry.resource_id}`);
+
+      } else {
+        const stmt = this.db.prepare(`
+          INSERT INTO translations (
+            id,
+            resource_id,
+            title,
+            summary,
+            description,
+            text,
+            original_text,
+            language,
+            keywords,
+            timestamp
+          ) VALUES (
+            @id,
+            @resource_id,
+            @title,
+            @summary,
+            @description,
+            @text,
+            @original_text,
+            @language,
+            @keywords,
+            @timestamp
+          )
+        `);
+        stmt.run(entry);
+        logger.info(`Inserted new translation entry with resource_id: ${entry.resource_id}`);
+      }
+
+    } catch (error) {
+      logger.error(`Error upserting translation entry: ${
+        error instanceof Error ? error.message : JSON.stringify(error)
+      }`);
     }
   }
 

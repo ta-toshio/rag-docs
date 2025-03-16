@@ -79,14 +79,14 @@ program.command('url')
 
       const sortedSitemap: SitemapEntry[] = sortByDirectory(sitemap, url);
 
-      await saveSitemapToFile(sortedSitemap, url);
+      saveSitemapToFile(sortedSitemap, url);
       // logger.info(JSON.stringify(sortedSitemap, null, 2));
 
-      let project = await projectRepository.getProjectByValue(url);
+      let project = projectRepository.getProjectByValue(url);
 
       if (!project) {
-        project = projectRepository.createProject(factoryProjectEntry(url));
-        logger.info(`Created new project with value: ${url}`);
+        projectRepository.createProject(factoryProjectEntry(url));
+        project = projectRepository.getProjectByValue(url);
       }
 
       if (!project) {
@@ -117,7 +117,7 @@ program.command('url')
           const markdown = htmlToMarkdown(dom);
 
           const markdownFilePath = getMarkdownFilePath(entry.url);
-          await saveMarkdownToFile(markdown, markdownFilePath);
+          saveMarkdownToFile(markdown, markdownFilePath);
 
           let summarization, translatation;
 

@@ -14,7 +14,7 @@ describe('saveSitemapToFile', () => {
       { url: 'https://docs.roocode.com/getting-started', title: 'Getting Started', fetch: false },
     ];
 
-    await saveSitemapToFile(sitemap, url);
+    saveSitemapToFile(sitemap, url);
 
     const parsedUrl = new URL(url);
     const domain = parsedUrl.hostname;
@@ -33,7 +33,7 @@ describe('saveSummarizationToFile', () => {
     const summaryContent = '# Summary of Test Page';
     const outputPath = getSummarizationFilePath(url)
 
-    await saveSummarizationToFile(summaryContent, outputPath);
+    saveSummarizationToFile(summaryContent, outputPath);
 
     expect(fs.existsSync(outputPath)).toBe(true);
     expect(fs.readFileSync(outputPath, 'utf-8')).toBe(summaryContent);

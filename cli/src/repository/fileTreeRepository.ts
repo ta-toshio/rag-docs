@@ -61,50 +61,54 @@ export class FileTreeRepository {
   public upsertFileTreeEntry(entry: FileTreeEntry): void {
     const existingEntry = this.getFileTreeEntryUniqueKey(entry.project_id, entry.resource_id);
 
-    if (existingEntry) {
-      const stmt = this.db.prepare(`
-        UPDATE file_trees SET
-          resource_id = @resource_id,
-          domain = @domain,
-          name = @name,
-          type = @type,
-          path = @path,
-          parent = @parent,
-          timestamp = @timestamp,
-          sort_order = @sort_order,
-          project_id = @project_id
-        WHERE resource_id = @resource_id
-      `);
-      stmt.run(entry);
-      logger.info(`Updated file tree entry with resource_id: ${entry.resource_id}`);
-    } else {
-      const stmt = this.db.prepare(`
-        INSERT INTO file_trees (
-          id,
-          resource_id,
-          domain,
-          name,
-          type,
-          path,
-          parent,
-          timestamp,
-          sort_order,
-          project_id
-        ) VALUES (
-          @id,
-          @resource_id,
-          @domain,
-          @name,
-          @type,
-          @path,
-          @parent,
-          @timestamp,
-          @sort_order,
-          @project_id
-        )
-      `);
-      stmt.run(entry);
-      logger.info(`Inserted new file tree entry with resource_id: ${entry.resource_id}`);
+    try {
+      if (existingEntry) {
+        const stmt = this.db.prepare(`
+          UPDATE file_trees SET
+            resource_id = @resource_id,
+            domain = @domain,
+            name = @name,
+            type = @type,
+            path = @path,
+            parent = @parent,
+            timestamp = @timestamp,
+            sort_order = @sort_order,
+            project_id = @project_id
+          WHERE resource_id = @resource_id
+        `);
+        stmt.run(entry);
+        logger.info(`Updated file tree entry with resource_id: ${entry.resource_id}`);
+      } else {
+        const stmt = this.db.prepare(`
+          INSERT INTO file_trees (
+            id,
+            resource_id,
+            domain,
+            name,
+            type,
+            path,
+            parent,
+            timestamp,
+            sort_order,
+            project_id
+          ) VALUES (
+            @id,
+            @resource_id,
+            @domain,
+            @name,
+            @type,
+            @path,
+            @parent,
+            @timestamp,
+            @sort_order,
+            @project_id
+          )
+        `);
+        stmt.run(entry);
+        logger.info(`Inserted new file tree entry with resource_id: ${entry.resource_id}`);
+      }
+    } catch (error) {
+      logger.error(`Error upserting file tree entry: ${error}`);
     }
   }
 
