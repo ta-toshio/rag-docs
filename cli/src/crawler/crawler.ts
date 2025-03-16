@@ -70,6 +70,7 @@ async function crawlPage(
         const normalizedLinkUrl = normalizeUrl(link.url);
         if (!uniqueUrls.has(normalizedLinkUrl)) {
           uniqueUrls.add(normalizedLinkUrl);
+          link.title= $(element).text().trim() || link.title;
           links.push(link);
         }
       }

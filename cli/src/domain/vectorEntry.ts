@@ -2,7 +2,7 @@ import { v7 as uuidv7 } from 'uuid';
 
 export interface VectorEntry {
   id: string;          // ユニークな識別子 (ドキュメントの識別子 + 段落番号)
-  resource_id: string;     // translation_collection の resource_id に対応
+  resource_id: string;     // translations の resource_id に対応
   paragraph_index: number;
   vector: number[];    // 埋め込みベクトル (Google Gemini API, 768次元)
   original_text: string; // 元のテキスト

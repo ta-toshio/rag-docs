@@ -12,7 +12,7 @@ export class TranslationRepository {
 
   private initializeTable(): void {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS translation_collection (
+      CREATE TABLE IF NOT EXISTS translations (
         id TEXT PRIMARY KEY,
         resource_id TEXT NOT NULL,
         title TEXT NOT NULL,
@@ -32,7 +32,7 @@ export class TranslationRepository {
 
     if (existingEntry) {
       const stmt = this.db.prepare(`
-        UPDATE translation_collection SET
+        UPDATE translations SET
           resource_id = @resource_id,
           title = @title,
           summary = @summary,
@@ -48,7 +48,7 @@ export class TranslationRepository {
       logger.info(`Updated translation entry with resource_id: ${entry.resource_id}`);
     } else {
       const stmt = this.db.prepare(`
-        INSERT INTO translation_collection (
+        INSERT INTO translations (
           id,
           resource_id,
           title,
@@ -78,13 +78,13 @@ export class TranslationRepository {
   }
 
   public getTranslationEntryByResourceId(resource_id: string): TranslationEntry | null {
-    const stmt = this.db.prepare('SELECT * FROM translation_collection WHERE resource_id = ?');
+    const stmt = this.db.prepare('SELECT * FROM translations WHERE resource_id = ?');
     const result = stmt.get(resource_id);
     return result ? result as TranslationEntry : null;
   }
 
   public getTranslationEntryById(id: string): TranslationEntry | null {
-    const stmt = this.db.prepare('SELECT * FROM translation_collection WHERE id = ?');
+    const stmt = this.db.prepare('SELECT * FROM translations WHERE id = ?');
     const result = stmt.get(id);
     return result ? result as TranslationEntry : null;
   }
