@@ -13,6 +13,7 @@ interface SearchDialogProps {
   searchQuery: string
   onSearchQueryChange: (query: string) => void
   projectId: string
+  onFileSelect?: (file: SearchResult) => void
 }
 
 export function SearchDialog({
@@ -20,7 +21,8 @@ export function SearchDialog({
   onOpenChange,
   searchQuery,
   onSearchQueryChange,
-  projectId
+  projectId,
+  onFileSelect
 }: SearchDialogProps) {
   const [results, setResults] = React.useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
@@ -105,7 +107,12 @@ export function SearchDialog({
                   <div className="py-6 text-center text-sm text-muted-foreground">検索結果がありません。</div>
                 )}
                 {results.map((result) => (
-                  <ResultItem key={result.id} item={result} searchQuery={searchQuery} />
+                  <ResultItem
+                    key={result.id}
+                    item={result}
+                    searchQuery={searchQuery}
+                    onFileSelect={onFileSelect}
+                  />
                 ))}
               </>
             )}
@@ -120,9 +127,10 @@ interface ResultItemProps {
   item: SearchResult
   searchQuery: string
   level?: number
+  onFileSelect?: (file: SearchResult) => void
 }
 
-function ResultItem({ item, searchQuery, level = 0 }: ResultItemProps) {
+function ResultItem({ item, searchQuery, level = 0, onFileSelect }: ResultItemProps) {
   // Highlight matching text
   const highlightText = (text: string) => {
     if (!searchQuery || !text) return text
@@ -146,9 +154,18 @@ function ResultItem({ item, searchQuery, level = 0 }: ResultItemProps) {
     )
   }
 
+  const handleClick = () => {
+    if (onFileSelect) {
+      onFileSelect(item);
+    }
+  };
+
   return (
     <>
-      <div className="flex flex-1 items-center gap-2 mb-4">
+      <div
+        className="flex flex-1 items-center gap-2 mb-4 cursor-pointer hover:bg-accent/50 p-2 rounded"
+        onClick={handleClick}
+      >
         <File className="h-4 w-4 shrink-0 text-gray-500" />
         <div className="flex flex-col text-left">
           <div className="font-medium">{highlightText(item.name)}</div>

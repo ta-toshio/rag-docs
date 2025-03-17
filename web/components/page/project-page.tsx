@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { ProjectSelector } from "@/components/project-selector"
 import { SearchBar } from "@/components/search-bar"
-import { TreeView } from "@/components/tree-view"
+import { TreeView, TreeViewHandle } from "@/components/tree-view"
 import { MarkdownViewer } from "@/components/markdown-viewer"
 import { X, FileText, Languages, Text, ClipboardList } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -13,6 +13,7 @@ import { TranslationEntry } from "@/domain/translation"
 import { TreeNode } from "@/domain/tree-node"
 import { TooltipWrapper } from "../ui-wrapper/tooltip"
 import useLocalStorage from "@/hooks/use-local-storage"
+import { SearchResult } from "@/server-actions/search"
 
 type OutputType = "translation" | "summary" | "original"
 type OutputTypeField = "text" | "summary" | "original_text"
@@ -33,6 +34,13 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
     "outputType",
     "translation"
   );
+  const [expandedFolders, setExpandedFolders] = useLocalStorage<string[]>(
+    "expandedFolders",
+    []
+  );
+  
+  // TreeViewへの参照
+  const treeViewRef = useRef<TreeViewHandle>(null);
 
   // Handle file selection from the tree view
   const handleFileSelect = async (file: TreeNode) => {
@@ -96,6 +104,72 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
     setOutputType(type)
   }
 
+  // パスに基づいてフォルダを展開する
+  const expandPathInTree = (path: string) => {
+    const parts = path.split('/')
+    let currentPath = ''
+    const folderIds: string[] = []
+    
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (parts[i]) {
+        currentPath += (currentPath ? '/' : '') + parts[i]
+        
+        // このパスに対応するフォルダノードを探す
+        const findFolderByPath = (nodes: TreeNode[], path: string): string | null => {
+          for (const node of nodes) {
+            if (node.type === 'folder' && node.path === path) {
+              return node.id
+            }
+            if (node.children) {
+              const found = findFolderByPath(node.children, path)
+              if (found) {
+                return found
+              }
+            }
+          }
+          return null
+        }
+        
+        const folderId = findFolderByPath(files, currentPath)
+        if (folderId) {
+          folderIds.push(folderId)
+        }
+      }
+    }
+    
+    // TreeView の expandFolders 関数を呼び出す
+    if (treeViewRef.current && folderIds.length > 0) {
+      treeViewRef.current.expandFolders(folderIds)
+    }
+  }
+
+  // 検索結果からファイルを選択したときの処理
+  const handleSearchFileSelect = (searchResult: SearchResult) => {
+    // ファイルツリーから対応するノードを探す
+    const findNodeById = (nodes: TreeNode[], id: string): TreeNode | null => {
+      for (const node of nodes) {
+        if (node.id === id) {
+          return node
+        }
+        if (node.children) {
+          const found = findNodeById(node.children, id)
+          if (found) {
+            return found
+          }
+        }
+      }
+      return null
+    }
+
+    const node = findNodeById(files, searchResult.id)
+    if (node) {
+      // パスからフォルダを展開
+      expandPathInTree(node.path)
+      // ファイルを選択
+      handleFileSelect(node)
+    }
+  }
+
   // Get the active file and its content
   const activeFile = activeFileId ? openFiles.find((file) => file.id === activeFileId) : null
   const activeContent = activeFile && fileContents[activeFile.id]
@@ -109,7 +183,7 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
         <div className="flex items-center">
           <ProjectSelector projectId={projectId} />
         </div>
-        <SearchBar />
+        <SearchBar onFileSelect={handleSearchFileSelect} />
         <Link href="/chat" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
           <MessageCircle className="h-4 w-4" />
           <span>Chat</span>
@@ -185,7 +259,12 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-64 border-r bg-muted/30 overflow-auto">
-          <TreeView fileList={files} onFileSelect={handleFileSelect} activeFileId={activeFileId} />
+          <TreeView
+            ref={treeViewRef}
+            fileList={files}
+            onFileSelect={handleFileSelect}
+            activeFileId={activeFileId}
+          />
         </aside>
 
         {/* Content Area */}

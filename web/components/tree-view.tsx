@@ -1,10 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { ChevronRight, File, Folder, FolderOpen, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { TreeNode } from "@/domain/tree-node";
+
+export interface TreeViewHandle {
+  expandFolders: (folderIds: string[]) => void;
+}
 
 interface TreeViewProps {
   fileList: TreeNode[];
@@ -12,14 +17,28 @@ interface TreeViewProps {
   activeFileId?: string | null;
 }
 
-export function TreeView({ fileList, onFileSelect, activeFileId }: TreeViewProps) {
-  // State for expanded folders
-  const [expandedFolders, setExpandedFolders] = useLocalStorage<string[]>(
-    "expandedFolders",
-    []
-  );
+export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
+  ({ fileList, onFileSelect, activeFileId }, ref) => {
+    // State for expanded folders
+    const [expandedFolders, setExpandedFolders] = useLocalStorage<string[]>(
+      "expandedFolders",
+      []
+    );
 
-  const toggleFolder = (folderId: string) => {
+    // 外部から呼び出せる関数を定義
+    useImperativeHandle(ref, () => ({
+      expandFolders: (folderIds: string[]) => {
+        const newExpandedFolders = [...expandedFolders];
+        folderIds.forEach(folderId => {
+          if (!newExpandedFolders.includes(folderId)) {
+            newExpandedFolders.push(folderId);
+          }
+        });
+        setExpandedFolders(newExpandedFolders);
+      }
+    }));
+
+    const toggleFolder = (folderId: string) => {
     const newExpanded = [...expandedFolders];
     if (newExpanded.includes(folderId)) {
       newExpanded.splice(newExpanded.indexOf(folderId), 1);
@@ -100,4 +119,4 @@ export function TreeView({ fileList, onFileSelect, activeFileId }: TreeViewProps
       ))}
     </div>
   );
-}
+});
