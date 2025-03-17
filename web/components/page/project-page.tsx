@@ -14,6 +14,8 @@ import { TreeNode } from "@/domain/tree-node"
 import { TooltipWrapper } from "../ui-wrapper/tooltip"
 import useLocalStorage from "@/hooks/use-local-storage"
 import { SearchResult } from "@/server-actions/search"
+import { FileTreeEntry } from "@/domain/file-tree"
+import { HybridNode } from "@/domain/build-tree"
 
 type OutputType = "translation" | "summary" | "original"
 type OutputTypeField = "text" | "summary" | "original_text"
@@ -24,7 +26,7 @@ const outputTypeMap: Record<OutputType, OutputTypeField> = {
   original: "original_text",
 }
 
-export default function ProjectPage({ projectId, files }: { projectId: string, files: TreeNode[] }) {
+export default function ProjectPage({ projectId, files, flatFiles }: { projectId: string, files: TreeNode[], flatFiles: HybridNode[] }) {
   // State for open files and active file
   const [openFiles, setOpenFiles] = useState<TreeNode[]>([])
   const [activeFileId, setActiveFileId] = useState<string | null>(null)
@@ -104,39 +106,22 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
     setOutputType(type)
   }
 
-  // パスに基づいてフォルダを展開する
   const expandPathInTree = (path: string) => {
     const parts = path.split('/')
     let currentPath = ''
     const folderIds: string[] = []
     
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (parts[i]) {
-        currentPath += (currentPath ? '/' : '') + parts[i]
-        
-        // このパスに対応するフォルダノードを探す
-        const findFolderByPath = (nodes: TreeNode[], path: string): string | null => {
-          for (const node of nodes) {
-            if (node.type === 'folder' && node.path === path) {
-              return node.id
-            }
-            if (node.children) {
-              const found = findFolderByPath(node.children, path)
-              if (found) {
-                return found
-              }
-            }
-          }
-          return null
-        }
-        
-        const folderId = findFolderByPath(files, currentPath)
-        if (folderId) {
-          folderIds.push(folderId)
+    for (let i = 0; i < parts.length; i++) {
+      currentPath += (currentPath ? '/' : '') + parts[i]
+      const _currentPath = '/' + currentPath
+
+      for (const node of flatFiles) {
+        if ((node.type === "folder" || node.isHybrid) && node.path === _currentPath) {
+          folderIds.push(node.id)
         }
       }
     }
-    
+
     // TreeView の expandFolders 関数を呼び出す
     if (treeViewRef.current && folderIds.length > 0) {
       treeViewRef.current.expandFolders(folderIds)
@@ -162,12 +147,13 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
     }
 
     const node = findNodeById(files, searchResult.id)
+    
     if (node) {
       // パスからフォルダを展開
       expandPathInTree(node.path)
       // ファイルを選択
       handleFileSelect(node)
-    }
+    } 
   }
 
   // Get the active file and its content

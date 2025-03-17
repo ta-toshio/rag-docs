@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useEffect } from "react";
 import { ChevronRight, File, Folder, FolderOpen, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useLocalStorage from "@/hooks/use-local-storage";
@@ -34,6 +34,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             newExpandedFolders.push(folderId);
           }
         });
+        
         setExpandedFolders(newExpandedFolders);
       }
     }));
@@ -64,9 +65,16 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
     const isActive = activeFileId === item.id;
 
     const handleClick = () => {
-      if (hasChildren) {
+      if (hasChildren || item.isHybrid) {
+        // フォルダまたはハイブリッドノードの場合は展開/折りたたみ
         toggleFolder(item.id);
+        
+        // ハイブリッドノードの場合は、ファイルとしても選択
+        if (item.isHybrid && onFileSelect) {
+          onFileSelect(item);
+        }
       } else if (onFileSelect) {
+        // 通常のファイルの場合は選択のみ
         onFileSelect(item);
       }
     };
@@ -87,15 +95,28 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           ) : (
             <span className="w-4" />
           )}
-          {item.type === "folder" ? (
+          {item.isHybrid ? (
+            // ハイブリッドノード（ファイルとフォルダの両方）
+            <div className="relative">
+              {isExpanded ? (
+                <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
+              ) : (
+                <Folder className="h-4 w-4 shrink-0 text-blue-500" />
+              )}
+              <File className="h-3 w-3 shrink-0 text-gray-500 absolute -bottom-1 -right-1" />
+            </div>
+          ) : item.type === "folder" ? (
+            // 通常のフォルダ
             isExpanded ? (
               <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
             ) : (
               <Folder className="h-4 w-4 shrink-0 text-blue-500" />
             )
           ) : isMarkdown ? (
+            // Markdownファイル
             <FileText className="h-4 w-4 shrink-0 text-blue-500" />
           ) : (
+            // その他のファイル
             <File className="h-4 w-4 shrink-0 text-gray-500" />
           )}
           <span className="truncate">{item.name}</span>
