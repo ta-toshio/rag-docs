@@ -4,26 +4,28 @@ import * as React from "react"
 import { File, FolderOpen, ChevronRight, X, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-
-interface SearchResult {
-  id: string
-  title: string
-  category: string
-  path: string
-  type: "file" | "folder"
-  children?: SearchResult[]
-}
+import { searchDocuments, SearchResult } from "@/server-actions/search"
+import { useToast } from "@/hooks/use-toast"
 
 interface SearchDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   searchQuery: string
   onSearchQueryChange: (query: string) => void
+  projectId: string
 }
 
-export function SearchDialog({ open, onOpenChange, searchQuery, onSearchQueryChange }: SearchDialogProps) {
+export function SearchDialog({
+  open,
+  onOpenChange,
+  searchQuery,
+  onSearchQueryChange,
+  projectId
+}: SearchDialogProps) {
   const [results, setResults] = React.useState<SearchResult[]>([])
+  const [isLoading, setIsLoading] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   // Focus input when dialog opens
   React.useEffect(() => {
@@ -34,89 +36,43 @@ export function SearchDialog({ open, onOpenChange, searchQuery, onSearchQueryCha
     }
   }, [open])
 
-  // Simulated search results based on query
-  React.useEffect(() => {
-    if (!searchQuery) {
+  // Handle search
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!searchQuery.trim()) {
       setResults([])
       return
     }
 
-    // Simulate API call with sample data
-    const sampleResults: SearchResult[] = [
-      {
-        id: "1",
-        title: "Custom Instructions",
-        category: "Advanced Usage",
-        path: "/docs/custom-instructions",
-        type: "folder",
-        children: [
-          {
-            id: "2",
-            title: "Global Custom Instructions",
-            category: "Custom Instructions",
-            path: "/docs/custom-instructions/global",
-            type: "file",
-          },
-          {
-            id: "3",
-            title: "Examples of Custom Instructions",
-            category: "Custom Instructions",
-            path: "/docs/custom-instructions/examples",
-            type: "file",
-          },
-        ],
-      },
-      {
-        id: "4",
-        title: "Custom Modes",
-        category: "Advanced Usage",
-        path: "/docs/custom-modes",
-        type: "folder",
-        children: [
-          {
-            id: "5",
-            title: "Why Use Custom Modes?",
-            category: "Custom Modes",
-            path: "/docs/custom-modes/why-use",
-            type: "file",
-          },
-          {
-            id: "6",
-            title: "Creating Custom Modes",
-            category: "Custom Modes",
-            path: "/docs/custom-modes/creating",
-            type: "file",
-          },
-        ],
-      },
-      {
-        id: "7",
-        title: "Customization",
-        category: "Roo Code Docs",
-        path: "/docs/customization",
-        type: "file",
-      },
-      {
-        id: "8",
-        title: "Custom Modes",
-        category: "Basic Usage • Using Modes",
-        path: "/docs/custom-modes/basic",
-        type: "file",
-      },
-    ].filter(
-      (item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
+    setIsLoading(true)
 
-    setResults(sampleResults)
-  }, [searchQuery])
+    try {
+      const formData = new FormData()
+      formData.append("query", searchQuery)
+      formData.append("projectId", projectId)
+      formData.append("topK", "5")
+
+      const searchResults = await searchDocuments(formData)
+      setResults(searchResults)
+    } catch (error) {
+      console.error("Search error:", error)
+      toast({
+        title: "検索エラー",
+        description: error instanceof Error ? error.message : "検索中にエラーが発生しました。",
+        variant: "destructive",
+      })
+      setResults([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl gap-0 p-0">
         <div className="rounded-lg border shadow-md">
-          <div className="flex items-center border-b px-3">
+          <form onSubmit={handleSearch} className="flex items-center border-b px-3">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               ref={inputRef}
@@ -127,6 +83,7 @@ export function SearchDialog({ open, onOpenChange, searchQuery, onSearchQueryCha
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => onSearchQueryChange("")}
                 className="ml-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
               >
@@ -134,20 +91,23 @@ export function SearchDialog({ open, onOpenChange, searchQuery, onSearchQueryCha
                 <span className="sr-only">Clear search</span>
               </button>
             )}
-          </div>
+            <button type="submit" className="sr-only">Search</button>
+          </form>
           <div className="max-h-[500px] overflow-y-auto p-2">
-            {results.length === 0 && searchQuery && (
-              <div className="py-6 text-center text-sm text-muted-foreground">No results found.</div>
-            )}
-            {results.map((result) => (
-              <ResultItem key={result.id} item={result} searchQuery={searchQuery} />
-            ))}
-            {results.length > 0 && (
-              <div className="mt-4 border-t pt-4">
-                <button className="flex w-full cursor-pointer items-center justify-center rounded-sm px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent">
-                  See all results
-                </button>
+            {isLoading ? (
+              <div className="py-6 text-center">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                <p className="mt-2 text-sm text-muted-foreground">検索中...</p>
               </div>
+            ) : (
+              <>
+                {results.length === 0 && searchQuery && (
+                  <div className="py-6 text-center text-sm text-muted-foreground">検索結果がありません。</div>
+                )}
+                {results.map((result) => (
+                  <ResultItem key={result.id} item={result} searchQuery={searchQuery} />
+                ))}
+              </>
             )}
           </div>
         </div>
@@ -163,12 +123,9 @@ interface ResultItemProps {
 }
 
 function ResultItem({ item, searchQuery, level = 0 }: ResultItemProps) {
-  const [isExpanded, setIsExpanded] = React.useState(true)
-  const hasChildren = item.children && item.children.length > 0
-
   // Highlight matching text
   const highlightText = (text: string) => {
-    if (!searchQuery) return text
+    if (!searchQuery || !text) return text
 
     const regex = new RegExp(`(${searchQuery})`, "gi")
     const parts = text.split(regex)
@@ -191,38 +148,19 @@ function ResultItem({ item, searchQuery, level = 0 }: ResultItemProps) {
 
   return (
     <>
-      <button
-        className={cn(
-          "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent",
-          level > 0 && "ml-4",
-        )}
-        onClick={() => hasChildren && setIsExpanded(!isExpanded)}
-      >
-        <div className="flex flex-1 items-center gap-2">
-          {item.type === "folder" ? (
-            <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
-          ) : (
-            <File className="h-4 w-4 shrink-0 text-gray-500" />
+      <div className="flex flex-1 items-center gap-2 mb-4">
+        <File className="h-4 w-4 shrink-0 text-gray-500" />
+        <div className="flex flex-col text-left">
+          <div className="font-medium">{highlightText(item.name)}</div>
+          <div className="text-xs text-muted-foreground">{item.path}</div>
+          {item.hitText && (
+            <div className="text-xs text-muted-foreground mt-1">{highlightText(item.hitText)}</div>
           )}
-          <div className="flex flex-col text-left">
-            <div className="font-medium">{highlightText(item.title)}</div>
-            <div className="text-xs text-muted-foreground">{item.category}</div>
-          </div>
+          {item.score !== undefined && (
+            <div className="text-xs text-muted-foreground mt-1">スコア: {item.score.toFixed(2)}</div>
+          )}
         </div>
-        {hasChildren && (
-          <ChevronRight
-            className={cn(
-              "ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-              isExpanded && "rotate-90",
-            )}
-          />
-        )}
-      </button>
-      {hasChildren &&
-        isExpanded &&
-        item.children?.map((child) => (
-          <ResultItem key={child.id} item={child} searchQuery={searchQuery} level={level + 1} />
-        ))}
+      </div>
     </>
   )
 }

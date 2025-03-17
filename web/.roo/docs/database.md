@@ -219,6 +219,7 @@ export interface TranslationEntry {
 ```typescript
 export interface VectorEntry {
   id: string;          // ✅ ユニークな識別子 (ドキュメントの識別子 + 段落番号)
+  project_id: string;  // ✅ projects の id に対応
   resource_id: string;     // ✅ translations の resource_id に対応
   paragraph_index: number;
   vector: number[];    // ✅ 埋め込みベクトル (Google Gemini API, 768次元)

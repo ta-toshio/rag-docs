@@ -4,10 +4,13 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { SearchDialog } from "@/components/search-dialog"
+import { useParams } from "next/navigation"
 
 export function SearchBar() {
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const params = useParams()
+  const projectId = params.id as string
 
   return (
     <>
@@ -16,7 +19,13 @@ export function SearchBar() {
         <Input type="search" placeholder="Search files..." className="pl-8 cursor-pointer" readOnly />
       </div>
 
-      <SearchDialog open={open} onOpenChange={setOpen} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
+      <SearchDialog
+        open={open}
+        onOpenChange={setOpen}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        projectId={projectId}
+      />
     </>
   )
 }

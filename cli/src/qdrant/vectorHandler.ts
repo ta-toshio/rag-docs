@@ -54,6 +54,7 @@ export class VectorHandler {
             id: entry.id,
             vector: entry.vector,
             payload: {
+              project_id: entry.project_id,
               resource_id: entry.resource_id,
               paragraph_index: entry.paragraph_index,
               original_text: entry.original_text,

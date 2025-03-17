@@ -184,7 +184,7 @@ export default function ProjectPage({ projectId, files }: { projectId: string, f
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 border-r bg-muted/30">
+        <aside className="w-64 border-r bg-muted/30 overflow-auto">
           <TreeView fileList={files} onFileSelect={handleFileSelect} activeFileId={activeFileId} />
         </aside>
 

@@ -195,7 +195,7 @@ program.command('url')
             const vectorEntries = await Promise.all(
               paragraphs.map(async (para, paraIndex) => {
                 const vector = await getEmbedding(para);
-                return factoryVectorEntry(entry.url, paraIndex, vector, para, languageName);
+                return factoryVectorEntry(entry.url, project.id, paraIndex, vector, para, languageName);
               })
             );
             // const vectorEntries = paragraphs.map((para, paraIndex) => {
