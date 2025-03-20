@@ -17,6 +17,12 @@ import { SearchResult } from "@/server-actions/search"
 import { FileTreeEntry } from "@/domain/file-tree"
 import { HybridNode } from "@/domain/build-tree"
 
+interface ProjectPageProps {
+  projectId: string;
+  files: TreeNode[];
+  flatFiles: HybridNode[];
+}
+
 type OutputType = "translation" | "summary" | "original"
 type OutputTypeField = "text" | "summary" | "original_text"
 
@@ -26,7 +32,7 @@ const outputTypeMap: Record<OutputType, OutputTypeField> = {
   original: "original_text",
 }
 
-export default function ProjectPage({ projectId, files, flatFiles }: { projectId: string, files: TreeNode[], flatFiles: HybridNode[] }) {
+export default function ProjectPage({ projectId, files, flatFiles }: ProjectPageProps) {
   // State for open files and active file
   const [openFiles, setOpenFiles] = useState<TreeNode[]>([])
   const [activeFileId, setActiveFileId] = useState<string | null>(null)
@@ -170,7 +176,7 @@ export default function ProjectPage({ projectId, files, flatFiles }: { projectId
           <ProjectSelector projectId={projectId} />
         </div>
         <SearchBar onFileSelect={handleSearchFileSelect} />
-        <Link href="/chat" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+        <Link href={`/projects/${projectId}/chat`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
           <MessageCircle className="h-4 w-4" />
           <span>Chat</span>
         </Link>

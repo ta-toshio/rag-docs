@@ -92,7 +92,14 @@ export function buildTree(files: FileTreeEntry[]): TreeNode[] {
   return roots;
 }
 
-
+/**
+ * ツリー構造をフラットな配列に変換する関数
+ * 各ノードを再帰的に処理し、ツリーの構造を保持しつつ
+ * 1次元のリストに展開する
+ * 
+ * @param nodes ツリー構造のノード配列
+ * @returns フラット化されたノード配列
+ */
 export function flattenTree(nodes: TreeNode[]): HybridNode[] {
   let flatList: HybridNode[] = [];
 

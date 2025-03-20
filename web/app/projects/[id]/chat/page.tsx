@@ -13,7 +13,11 @@ interface Message {
   isUser: boolean
 }
 
-export default function ChatPage() {
+interface ChatPageProps {
+  projectId: string
+}
+
+export default function ChatPage({ projectId }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -92,15 +96,15 @@ export default function ChatPage() {
         {/* Header */}
         <header className="h-12 border-b flex items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <h1 className="font-semibold">ChatGPT 4.0</h1>
+            {/* <h1 className="font-semibold">ChatGPT 4.0</h1>
             <Button variant="ghost" size="sm">
               <Globe className="h-4 w-4" />
               共有する
-            </Button>
+            </Button> */}
           </div>
           <Link href="/" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
             <Home className="h-4 w-4" />
-            <span>Home</span>
+            <span>Back</span>
           </Link>
         </header>
 
@@ -139,12 +143,17 @@ export default function ChatPage() {
                   {inputValue.length > 0 && "Press Enter to send, Shift+Enter for new line"}
                 </div>
                 <div className="flex gap-2">
+                  {/*
                   <Button variant="ghost" size="sm">
                     <Globe className="h-4 w-4" />
                     <span className="ml-2">検索</span>
                   </Button>
                   <Button variant="ghost" size="sm">
                     Deep Research
+                  </Button>
+                  */}
+                  <Button variant="ghost" size="sm">
+                    <span className="ml-2">送信</span>
                   </Button>
                 </div>
               </div>
