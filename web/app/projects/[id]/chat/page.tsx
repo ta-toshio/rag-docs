@@ -3,31 +3,34 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Globe, Plus, MessageSquare, Home } from "lucide-react"
+import { Plus, MessageSquare, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
-interface Message {
-  id: string
-  content: string
-  isUser: boolean
-}
+import { ChatHistory } from "@/domain/chat-history"
 
 interface ChatPageProps {
   projectId: string
+  sessionId?: string
+  messages?: ChatHistory[]
 }
 
-export default function ChatPage({ projectId }: ChatPageProps) {
-  const [messages, setMessages] = useState<Message[]>([
+export default function ChatPage({ projectId, sessionId, messages: passedMessages }: ChatPageProps) {
+  const [messages, setMessages] = useState<ChatHistory[]>([
     {
       id: "1",
-      content: 'Leonardo was educated at Bugia, and afterwards toured the Mediterranean.',
-      isUser: true,
+      session_id: "1",
+      message: 'Leonardo was educated at Bugia, and afterwards toured the Mediterranean.',
+      role: "user",
+      created_at: new Date(),
+      updated_at: new Date(),
     },
     {
       id: "2",
-      content: `The map or diagram of which Leonardo Dati in his poem on the Sphere (Della Spera) wrote in 1422 " un T dentre a uno 0 mostra it disegno " (a T within an 0 shows the design) is one of the most persistent types among the circular or wheel maps of the world.`,
-      isUser: false,
+      session_id: "1",
+      message: `The map or diagram of which Leonardo Dati in his poem on the Sphere (Della Spera) wrote in 1422 " un T dentre a uno 0 mostra it disegno " (a T within an 0 shows the design) is one of the most persistent types among the circular or wheel maps of the world.`,
+      role: "assistant",
+      created_at: new Date(),
+      updated_at: new Date(),
     },
   ])
 
@@ -50,22 +53,28 @@ export default function ChatPage({ projectId }: ChatPageProps) {
     setInputValue(e.target.value)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Submit on Enter without Shift key
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      if (inputValue.trim()) {
-        // Add user message
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          content: inputValue,
-          isUser: true,
-        }
-        setMessages([...messages, newMessage])
-        setInputValue("")
-      }
-    }
-  }
+  // setMessages(history.map((msg) => ({
+  //   id: msg.id.toString(),
+  //   content: msg.message,
+  //   isUser: msg.role === "user",
+  // })));
+
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  //   // Submit on Enter without Shift key
+  //   if (e.key === "Enter" && !e.shiftKey) {
+  //     e.preventDefault()
+  //     if (inputValue.trim()) {
+  //       // Add user message
+  //       const newMessage: Message = {
+  //         id: Date.now().toString(),
+  //         content: inputValue,
+  //         isUser: true,
+  //       }
+  //       setMessages([...messages, newMessage])
+  //       setInputValue("")
+  //     }
+  //   }
+  // }
 
   return (
     <div className="flex h-screen">
@@ -112,13 +121,13 @@ export default function ChatPage({ projectId }: ChatPageProps) {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
+              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.isUser ? "bg-blue-500 text-white" : "bg-gray-100"
+                    message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="whitespace-pre-wrap">{message.message}</div>
                 </div>
               </div>
             ))}
@@ -133,7 +142,7 @@ export default function ChatPage({ projectId }: ChatPageProps) {
                 ref={textareaRef}
                 value={inputValue}
                 onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
+                // onKeyDown={handleKeyDown}
                 placeholder="質問してみましょう"
                 className="flex-1 resize-none border-0 bg-transparent outline-none min-h-[38px] max-h-[200px] py-1"
                 rows={1}

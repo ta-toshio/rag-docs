@@ -7,6 +7,6 @@ export interface FileTreeEntry {
   type: "file" | "folder";
   path: string;
   parent: string | null;
-  timestamp: string;
   sort_order: number;
+  timestamp: string;
 }

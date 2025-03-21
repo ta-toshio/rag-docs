@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import sqlite from "@/infrastructure/db/sqlite";
 import { TranslationEntry } from "@/domain/translation";
 import { FileTreeEntry } from "@/domain/file-tree";
+import { getFileTreesByResourceIds } from "@/infrastructure/db/file-tree";
+import { getTranslationsByResourceIds } from "@/infrastructure/db/translation";
 
 // TreeNodeを拡張した検索結果の型定義
 export interface SearchResult {
@@ -46,25 +48,7 @@ export async function searchDocuments(formData: FormData): Promise<SearchResult[
       .map(result => result.payload!.resource_id as string);
 
     // 4. resource_idとproject_idを検索条件にfile_treesテーブルからマッチしたレコードを取得
-    // IN句を使用して1回のクエリで複数のresource_idに対するデータを取得
-    const placeholders = resourceIds.map(() => '?').join(',');
-    const fileTreesQuery = `
-      SELECT
-        id,
-        project_id,
-        resource_id,
-        domain,
-        name,
-        type,
-        path,
-        parent
-      FROM file_trees
-      WHERE resource_id IN (${placeholders}) AND project_id = ?
-    `;
-
-    // パラメータ配列を作成（最後にprojectIdを追加）
-    const fileTreeParams = [...resourceIds, projectId];
-    const fileTreesResults = await sqlite.prepare(fileTreesQuery).all(fileTreeParams) as FileTreeEntry[];
+    const fileTreesResults = await getFileTreesByResourceIds(resourceIds, projectId);
 
     // resource_idをキーにしたマップを作成
     const fileTreeMap = new Map<string, FileTreeEntry>();
@@ -73,24 +57,7 @@ export async function searchDocuments(formData: FormData): Promise<SearchResult[
     });
 
     // 5. resource_idを条件にtranslationsテーブルからマッチしたレコードを取得
-    // IN句を使用して1回のクエリで複数のresource_idに対するデータを取得
-    const translationsQuery = `
-      SELECT
-        id,
-        resource_id,
-        title,
-        summary,
-        description,
-        text,
-        original_text,
-        language,
-        keywords,
-        timestamp
-      FROM translations
-      WHERE resource_id IN (${placeholders})
-    `;
-
-    const translationsResults = await sqlite.prepare(translationsQuery).all(resourceIds) as TranslationEntry[];
+    const translationsResults = await getTranslationsByResourceIds(resourceIds);
 
     // resource_idをキーにしたマップを作成
     const translationMap = new Map<string, TranslationEntry>();
