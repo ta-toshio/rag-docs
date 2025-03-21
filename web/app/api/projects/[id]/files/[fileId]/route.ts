@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFileTree, getTranslation } from "@/server-actions/repository";
+import { getFileTree, getTranslation } from "@/repository/db/sqlite-query";
 
 export async function GET(
   req: Request,

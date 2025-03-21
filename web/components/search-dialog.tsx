@@ -4,7 +4,7 @@ import * as React from "react"
 import { File, FolderOpen, ChevronRight, X, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { searchDocuments, SearchResult } from "@/server-actions/search"
+import { searchDocuments, SearchResult } from "@/actions/search"
 import { useToast } from "@/hooks/use-toast"
 
 interface SearchDialogProps {

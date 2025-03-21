@@ -1,9 +1,9 @@
 "use server";
 
-import { searchVectors } from "@/lib/qdrant";
+import { searchVectors } from "@/repository/vector/qdrant";
 import { getEmbedding } from "@/lib/gemini";
 import { revalidatePath } from "next/cache";
-import db from "@/lib/db";
+import sqlite from "@/repository/db/sqlite";
 import { TranslationEntry } from "@/domain/translation";
 import { FileTreeEntry } from "@/domain/file-tree";
 
@@ -64,7 +64,7 @@ export async function searchDocuments(formData: FormData): Promise<SearchResult[
 
     // パラメータ配列を作成（最後にprojectIdを追加）
     const fileTreeParams = [...resourceIds, projectId];
-    const fileTreesResults = await db.prepare(fileTreesQuery).all(fileTreeParams) as FileTreeEntry[];
+    const fileTreesResults = await sqlite.prepare(fileTreesQuery).all(fileTreeParams) as FileTreeEntry[];
 
     // resource_idをキーにしたマップを作成
     const fileTreeMap = new Map<string, FileTreeEntry>();
@@ -90,7 +90,7 @@ export async function searchDocuments(formData: FormData): Promise<SearchResult[
       WHERE resource_id IN (${placeholders})
     `;
 
-    const translationsResults = await db.prepare(translationsQuery).all(resourceIds) as TranslationEntry[];
+    const translationsResults = await sqlite.prepare(translationsQuery).all(resourceIds) as TranslationEntry[];
 
     // resource_idをキーにしたマップを作成
     const translationMap = new Map<string, TranslationEntry>();

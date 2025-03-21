@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFiles } from "@/server-actions/repository";
+import { getFiles } from "@/repository/db/sqlite-query";
 import { buildTree } from "@/domain/build-tree";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params 
+    const { id } = await params
     const projectId = id
     if (!projectId) {
       return NextResponse.json({ error: "Missing project ID" }, { status: 400 });

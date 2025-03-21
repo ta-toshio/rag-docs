@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import db from "@/lib/db";
+import sqlite from "@/repository/db/sqlite";
 import { ProjectEntry } from "@/domain/project";
 
 export async function GET() {
   try {
-    const stmt = db.prepare('SELECT id, value FROM projects');
+    const stmt = sqlite.prepare('SELECT id, value FROM projects');
     const rows = stmt.all() as ProjectEntry[];
 
     const projects = rows.map((row) => ({

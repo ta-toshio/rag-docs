@@ -3,6 +3,6 @@ import path from "path";
 
 const dbPath = path.join(process.cwd(), "./../database.sqlite");
 
-const db = new Database(dbPath);
+const sqlite = new Database(dbPath);
 
-export default db;
+export default sqlite;

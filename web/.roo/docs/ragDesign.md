@@ -54,7 +54,7 @@ export class GoogleEmbeddings extends Embeddings {
   constructor() {
     super();
     this.model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({
-      model: "embedding-001",
+      model: "embedding-004",
     });
   }
 

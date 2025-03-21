@@ -1,10 +1,10 @@
 import { FileTreeEntry } from "@/domain/file-tree";
 import { TranslationEntry } from "@/domain/translation";
-import db from "@/lib/db";
+import sqlite from "@/repository/db/sqlite";
 
 export async function getFiles(projectId: string): Promise<FileTreeEntry[]> {
   try {
-    return await db
+    return await sqlite
     .prepare(
       `SELECT
         id,
@@ -28,7 +28,7 @@ export async function getFiles(projectId: string): Promise<FileTreeEntry[]> {
 
 export async function getTranslation(fileId: string) {
   try {
-    return await db
+    return await sqlite
     .prepare(
       `SELECT
           id,
@@ -54,7 +54,7 @@ export async function getTranslation(fileId: string) {
 
 export async function getFileTree(id: string) {
   try {
-    return await db
+    return await sqlite
     .prepare(
       `SELECT
         id,
