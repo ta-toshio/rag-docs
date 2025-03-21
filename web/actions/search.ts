@@ -1,9 +1,9 @@
 "use server";
 
-import { searchVectors } from "@/repository/vector/qdrant";
-import { getEmbedding } from "@/lib/gemini";
+import { searchVectors } from "@/infrastructure/vector/qdrant";
+import { getEmbedding } from "@/infrastructure/llm/gemini";
 import { revalidatePath } from "next/cache";
-import sqlite from "@/repository/db/sqlite";
+import sqlite from "@/infrastructure/db/sqlite";
 import { TranslationEntry } from "@/domain/translation";
 import { FileTreeEntry } from "@/domain/file-tree";
 

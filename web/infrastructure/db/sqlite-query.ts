@@ -1,6 +1,6 @@
 import { FileTreeEntry } from "@/domain/file-tree";
 import { TranslationEntry } from "@/domain/translation";
-import sqlite from "@/repository/db/sqlite";
+import sqlite from "@/infrastructure/db/sqlite";
 
 export async function getFiles(projectId: string): Promise<FileTreeEntry[]> {
   try {

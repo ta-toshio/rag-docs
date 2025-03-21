@@ -1,6 +1,6 @@
 import type React from "react"
 import ProjectPageComponent from "@/components/page/project-page"
-import { getFiles } from "@/repository/db/sqlite-query"
+import { getFiles } from "@/infrastructure/db/sqlite-query"
 import { buildTree, flattenTree } from "@/domain/build-tree"
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {

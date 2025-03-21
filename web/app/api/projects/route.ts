@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import sqlite from "@/repository/db/sqlite";
+import sqlite from "@/infrastructure/db/sqlite";
 import { ProjectEntry } from "@/domain/project";
 
 export async function GET() {

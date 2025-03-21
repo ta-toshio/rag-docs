@@ -31,19 +31,19 @@
 │   ├── embeddings.ts  # Google AI Embeddings を用いたベクトル化処理
 │   ├── search.ts  # Qdrant での検索処理
 │   ├── rag.ts  # RAG の統合処理
-│   ├── chatHistory.ts  # SQLite に会話履歴を保存・取得
+│   ├── chat-history.ts  # SQLite に会話履歴を保存・取得
 ├── lib  # ライブラリやユーティリティ
 │   ├── db.ts  # SQLite の管理
 │   ├── qdrant.ts  # Qdrant のクライアント設定
 │   ├── gemini.ts  # Google Gemini API のラッパー
-│   ├── GoogleEmbeddings.ts  # Google AI Embeddings のカスタムクラス
+│   ├── google-embeddings.ts  # Google AI Embeddings のカスタムクラス
 ```
 
 ---
 
 ## **3. クラス & 実装内容 **
 
-### **📌 `GoogleEmbeddings.ts`（Google AI Embeddings のカスタムクラス）**
+### **📌 `google-embeddings.ts`（Google AI Embeddings のカスタムクラス）**
 ```typescript
 import { Embeddings } from "langchain/embeddings/base";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -71,7 +71,7 @@ export class GoogleEmbeddings extends Embeddings {
 
 ---
 
-### **📌 `chatHistory.ts`（SQLite の履歴保存 & 取得）**
+### **📌 `chat-history.ts`（SQLite の履歴保存 & 取得）**
 ```typescript
 import { getDB } from "@/lib/db";
 
