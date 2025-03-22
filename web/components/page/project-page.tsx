@@ -1,20 +1,18 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { ProjectSelector } from "@/components/project-selector"
 import { SearchBar } from "@/components/search-bar"
 import { TreeView, TreeViewHandle } from "@/components/tree-view"
 import { MarkdownViewer } from "@/components/markdown-viewer"
-import { X, FileText, Languages, Text, ClipboardList } from "lucide-react"
+import { X, FileText, Languages, Text, ClipboardList, MessageCircle, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TranslationEntry } from "@/domain/translation"
 import { TreeNode } from "@/domain/tree-node"
 import { TooltipWrapper } from "../ui-wrapper/tooltip"
 import useLocalStorage from "@/hooks/use-local-storage"
-import { SearchResult } from "@/server-actions/search"
-import { FileTreeEntry } from "@/domain/file-tree"
+import { SearchResult } from "@/actions/search"
 import { HybridNode } from "@/domain/build-tree"
 
 interface ProjectPageProps {
@@ -176,10 +174,19 @@ export default function ProjectPage({ projectId, files, flatFiles }: ProjectPage
           <ProjectSelector projectId={projectId} />
         </div>
         <SearchBar onFileSelect={handleSearchFileSelect} />
-        <Link href={`/projects/${projectId}/chat`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-          <MessageCircle className="h-4 w-4" />
-          <span>Chat</span>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Link>
+          <Link
+            href={`/projects/${projectId}/chat`}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Chat</span>
+          </Link>
+        </div>
       </header>
 
       {/* Tab Bar - Only show if there are open files */}

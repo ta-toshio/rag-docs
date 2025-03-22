@@ -83,6 +83,7 @@ export class VectorHandler {
           id: entry.id,
           vector: entry.vector,
           payload: {
+            project_id: entry.project_id,
             resource_id: entry.resource_id,
             paragraph_index: entry.paragraph_index,
             original_text: entry.original_text,
@@ -109,8 +110,9 @@ export class VectorHandler {
   /**
  * 指定された resource_id の配列に該当するベクトルデータをバッチ削除する
  * @param resourceIds 削除対象の resource_id の配列
+ * @param projectId 削除対象の project_id
  */
-  async deleteVectorsByResourceIds(resourceIds: string[]): Promise<void> {
+  async deleteVectorsByResourceIds(resourceIds: string[], projectId: string): Promise<void> {
     if (resourceIds.length === 0) {
       logger.info('No resource_ids provided for deletion.');
       return;
@@ -118,6 +120,12 @@ export class VectorHandler {
 
     // Qdrant のフィルター条件として、各 resource_id に対する match を should 条件で指定
     const filter = {
+      must: [
+        {
+          key: "project_id",
+          match: { value: projectId }
+        }
+      ],
       should: resourceIds.map(resource_id => ({
         key: "resource_id",
         match: { value: resource_id }
@@ -129,9 +137,9 @@ export class VectorHandler {
         wait: true,
         filter,
       });
-      logger.info(`Deleted vectors with resource_ids: ${resourceIds.join(", ")} from collection: ${this.collectionName}`);
+      logger.info(`Deleted vectors with resource_ids: ${resourceIds.join(", ")} and project_id: ${projectId} from collection: ${this.collectionName}`);
     } catch (error) {
-      logger.error(`Failed to delete vectors with resource_ids: ${resourceIds.join(", ")}: ${error}`);
+      logger.error(`Failed to delete vectors with resource_ids: ${resourceIds.join(", ")} and project_id: ${projectId}: ${error}`);
       throw error;
     }
   }

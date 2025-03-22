@@ -1,3 +1,7 @@
+'use server'
+
+import { v7 as uuidv7 } from 'uuid';
+import { redirect } from 'next/navigation'
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
@@ -5,7 +9,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { searchForRAG } from '@/infrastructure/vector/qdrant';
 import { chatModel, getEmbedding } from '@/infrastructure/llm/gemini';
 import { getTranslationsByResourceIds } from '@/infrastructure/db/translation';
-import { getChatHistories, saveChatHistory } from '@/infrastructure/db/chat-history';
+import { createChatHistory, getChatHistories, getChatHistory } from '@/infrastructure/db/chat-history';
 
 // セッションごとの会話履歴管理用
 interface ChatMessage {
@@ -33,10 +37,13 @@ const ragPrompt = ChatPromptTemplate.fromTemplate(`
 
 export async function processChat(
   userInput: string,
-  sessionId: string,
   projectId: string,
-  userId: string
+  passedSessionId?: string,
+  // userId: string
 ) {
+
+  const isStartingSession = passedSessionId === undefined;
+  const sessionId = passedSessionId || uuidv7();
   // DBから過去のチャット履歴を取得
   const pastMessages = await getChatHistories(sessionId);
 
@@ -98,8 +105,18 @@ export async function processChat(
   sessionMessages[sessionId].push({ role: 'assistant', message: response });
 
   // チャット履歴に今回のやり取りを追加し、DBへ保存
-  await saveChatHistory(sessionId, 'user', userInput);
-  await saveChatHistory(sessionId, 'assistant', response);
+  const userMessageId = uuidv7();
+  const assistantMessageId = uuidv7();
+  await createChatHistory(userMessageId, sessionId, 'user', userInput);
+  await createChatHistory(assistantMessageId, sessionId, 'assistant', response);
 
-  return response;
+  if (isStartingSession) {
+    redirect(`/projects/${projectId}/chat/${sessionId}`);
+    return;
+  }
+
+  return {
+    user: await getChatHistory(userMessageId),
+    assistant: await getChatHistory(assistantMessageId)
+  };
 }

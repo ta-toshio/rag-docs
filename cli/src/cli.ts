@@ -28,6 +28,7 @@ import { splitMarkdownToParagraphs } from './utils/paragraphSplit';
 import { QDRANT_COLLECTION_NAME, QDRANT_URL } from './config';
 import { getEmbedding } from './utils/vectorize';
 import { factoryProjectEntry } from './domain/projectEntry';
+import { ChatSessionRepository } from './repository/chatSessionRepository';
 import { normalizeUrl } from './crawler/urlUtils';
 
 // Initialize database and handlers
@@ -35,6 +36,7 @@ const db = initializeDatabase();
 const fileTreeHandler = new FileTreeRepository(db);
 const translationHandler = new TranslationRepository(db);
 const projectRepository = new ProjectRepository(db);
+new ChatSessionRepository(db);
 
 // Initialize Qdrant client and handler
 const qdrantClient = new QdrantClient({
@@ -205,7 +207,7 @@ program.command('url')
             //   return factoryVectorEntry(entry.url, paraIndex, dummyVector, para, languageName);
             // });
             // バッチ処理で Qdrant に登録
-            await vectorHandler.deleteVectorsByResourceIds([entry.url]);
+            await vectorHandler.deleteVectorsByResourceIds([entry.url], project.id);
             await vectorHandler.upsertVectors(vectorEntries);
           } catch (e) {
             logger.error(`Failed to upsert vector entries: ${e}`);
