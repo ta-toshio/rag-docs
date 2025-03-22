@@ -21,7 +21,7 @@ export interface SearchResult {
 export async function searchDocuments(formData: FormData): Promise<SearchResult[]> {
   const query = formData.get("query") as string;
   const projectId = formData.get("projectId") as string;
-  const topK = Number(formData.get("topK")) || 5;
+  const topK = Number(formData.get("topK")) || 20;
 
   if (!query) {
     throw new Error("検索クエリが必要です。");

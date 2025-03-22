@@ -12,15 +12,15 @@ export const qdrantClient = new QdrantClient({
 export async function searchVectors(
   vector: number[],
   projectId: string,
-  topK: number = 5
+  topK: number = 20
 ) {
   try {
     return await qdrantClient.search(COLLECTION_NAME, {
       vector,
       limit: topK,
-      // filter: {
-      //   must: [{ key: "project_id", match: { value: projectId } }]
-      // }
+      filter: {
+        must: [{ key: "project_id", match: { value: projectId } }]
+      }
     });
   } catch (error) {
     console.error("Error in searchVectors:", error);
@@ -41,7 +41,7 @@ interface SearchForRAGResult {
 export async function searchForRAG(
   vector: number[],
   projectId: string,
-  topK: number = 5
+  topK: number = 10
 ): Promise<SearchForRAGResult> {
   try {
     const results = await qdrantClient.search(
@@ -49,9 +49,9 @@ export async function searchForRAG(
       {
         vector,
         limit: topK,
-      // filter: {
-      //   must: [{ key: "project_id", match: { value: projectId } }]
-      // }
+        filter: {
+          must: [{ key: "project_id", match: { value: projectId } }]
+        }
       }
     );
 

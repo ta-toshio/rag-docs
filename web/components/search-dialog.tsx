@@ -53,7 +53,7 @@ export function SearchDialog({
       const formData = new FormData()
       formData.append("query", searchQuery)
       formData.append("projectId", projectId)
-      formData.append("topK", "5")
+      formData.append("topK", "50")
 
       const searchResults = await searchDocuments(formData)
       setResults(searchResults)
@@ -106,9 +106,9 @@ export function SearchDialog({
                 {results.length === 0 && searchQuery && (
                   <div className="py-6 text-center text-sm text-muted-foreground">検索結果がありません。</div>
                 )}
-                {results.map((result) => (
+                {results.map((result, i) => (
                   <ResultItem
-                    key={result.id}
+                    key={`${result.id}-${i}`}
                     item={result}
                     searchQuery={searchQuery}
                     onFileSelect={onFileSelect}
@@ -143,7 +143,7 @@ function ResultItem({ item, searchQuery, level = 0, onFileSelect }: ResultItemPr
         {parts.map((part, i) => {
           if (part.toLowerCase() === searchQuery.toLowerCase()) {
             return (
-              <span key={i} className="bg-yellow-200 dark:bg-yellow-800">
+              <span key={`highlight-text-${item.id}-${i}`} className="bg-yellow-200 dark:bg-yellow-800">
                 {part}
               </span>
             )
