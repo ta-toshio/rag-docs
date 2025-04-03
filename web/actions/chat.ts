@@ -107,8 +107,8 @@ export async function processChat(
   // チャット履歴に今回のやり取りを追加し、DBへ保存
   const userMessageId = uuidv7();
   const assistantMessageId = uuidv7();
-  await createChatHistory(userMessageId, sessionId, 'user', userInput);
-  await createChatHistory(assistantMessageId, sessionId, 'assistant', response);
+  await createChatHistory(userMessageId, projectId, sessionId, 'user', userInput);
+  await createChatHistory(assistantMessageId, projectId, sessionId, 'assistant', response);
 
   if (isStartingSession) {
     redirect(`/projects/${projectId}/chat/${sessionId}`);

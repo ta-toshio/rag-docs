@@ -7,7 +7,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   const { id, sessionId } = await params
 
   const history = await getChatHistories(sessionId);
-  const sessions = await getDistinctSessionIds();
+  const sessions = await getDistinctSessionIds(id);
 
   return <ChatPageComponent
     projectId={id}

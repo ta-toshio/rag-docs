@@ -80,14 +80,19 @@ export default function ChatPageComponent({
         <nav className="flex-1 overflow-y-auto p-4">
           <div className="space-y-2">
             {sessions && sessions.map(session => (
-              <Button
-                key={`session-${session.id}`}
-                variant="ghost"
-                className="w-full justify-start gap-2"
+              <Link
+                href={`/projects/${projectId}/chat/${session.session_id}`}
+                key={`session-${session.session_id}`}
               >
-                <MessageSquare className="h-4 w-4" />
-                <span className="truncate">{session.message}</span>
-              </Button>
+                <Button
+                    key={`session-${session.id}`}
+                    variant="ghost"
+                    className="w-full justify-start gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="truncate">{session.message}</span>
+                </Button>
+              </Link>
             ))}
           </div>
         </nav>

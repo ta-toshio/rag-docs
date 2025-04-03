@@ -22,6 +22,7 @@ export async function getChatHistories(sessionId: string) {
 
 export async function createChatHistory(
   id: string,
+  projectId: string,
   sessionId: string, 
   role: string,
   message: string 
@@ -29,28 +30,36 @@ export async function createChatHistory(
   const stmt = db.prepare(`
     INSERT INTO chat_sessions (
       id,
+      project_id,
       session_id, 
       role,
       message,
       timestamp
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(id, sessionId, role, message, new Date().toISOString());
+  stmt.run(id, projectId, sessionId, role, message, new Date().toISOString());
 }
 
 
-export async function getDistinctSessionIds() {
+export async function getDistinctSessionIds(projectId: string) {
   // @TODO chat_sessionsとchat_session_messagesに分ける
   const stmt = db.prepare(
-    `SELECT session_id, id, role, message, timestamp
+    `SELECT
+      id,
+      session_id,
+      project_id,
+      role,
+      message,
+      timestamp
      FROM chat_sessions
      WHERE (session_id, timestamp) IN (
        SELECT session_id, MIN(timestamp)
        FROM chat_sessions
        GROUP BY session_id
      )
+      AND project_id = ?
      ORDER BY session_id`
   );
-  return stmt.all() as ChatHistory[];
+  return stmt.all([projectId]) as ChatHistory[];
 }
